@@ -1,0 +1,23 @@
+models:
+  - id: whisper-small-en
+    role: transcriber
+    runtime: faster-whisper
+    model_name: small.en
+    compute_type: float16
+    device: cuda
+    device_fallback: cpu
+    compute_type_fallback: int8
+    vram_mb: 600
+
+  - id: gemma3-4b-q4
+    role: llm
+    runtime: ollama
+    model_name: gemma3:4b
+    temperature: 0.1
+    top_p: 0.9
+    num_ctx: 4096
+    vram_mb: 3000
+
+active:
+  transcriber: whisper-small-en
+  llm: gemma3-4b-q4

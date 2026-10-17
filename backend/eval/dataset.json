@@ -1,0 +1,399 @@
+{
+  "metadata": {
+    "synthetic": true,
+    "description": "Synthetic evaluation dataset for YapIt voice note extraction and classification.",
+    "fixed_anchor": {
+      "captured_at": "2026-10-17T10:00:00+05:30",
+      "timezone": "Asia/Kolkata"
+    }
+  },
+  "samples": [
+    {
+      "id": "eval-01",
+      "transcript": "Ravi owes me 500 rupees, he said he'll pay by next Friday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Ravi",
+        "direction": "they_owe_me",
+        "amount": {"amount": 500.0, "currency": "INR"},
+        "due_date": {"spoken": "next Friday", "resolved": "2026-10-30"}
+      }
+    },
+    {
+      "id": "eval-02",
+      "transcript": "I need to pay Rahul 2500 rupees for the dinner we had yesterday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Rahul",
+        "direction": "i_owe_them",
+        "amount": {"amount": 2500.0, "currency": "INR"}
+      }
+    },
+    {
+      "id": "eval-03",
+      "transcript": "Aman owes me 1.5 lakh for the laptop he purchased from me.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Aman",
+        "direction": "they_owe_me",
+        "amount": {"amount": 150000.0, "currency": "INR"}
+      }
+    },
+    {
+      "id": "eval-04",
+      "transcript": "Gave 5k cash to Priya for office supplies.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Priya",
+        "direction": "they_owe_me",
+        "amount": {"amount": 5000.0, "currency": "INR"}
+      }
+    },
+    {
+      "id": "eval-05",
+      "transcript": "I owe Suresh 50 dollars for the cloud hosting subscription.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Suresh",
+        "direction": "i_owe_them",
+        "amount": {"amount": 50.0, "currency": "USD"}
+      }
+    },
+    {
+      "id": "eval-06",
+      "transcript": "Vikram borrowed 2000 rupees and promised to return by end of the month.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Vikram",
+        "direction": "they_owe_me",
+        "amount": {"amount": 2000.0, "currency": "INR"},
+        "due_date": {"spoken": "end of the month", "resolved": "2026-10-31"}
+      }
+    },
+    {
+      "id": "eval-07",
+      "transcript": "Pay Deepak 10k for rent by tomorrow.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Deepak",
+        "direction": "i_owe_them",
+        "amount": {"amount": 10000.0, "currency": "INR"},
+        "due_date": {"spoken": "tomorrow", "resolved": "2026-10-18"}
+      }
+    },
+    {
+      "id": "eval-08",
+      "transcript": "Ananya has to return 3500 rupees by the 25th.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Ananya",
+        "direction": "they_owe_me",
+        "amount": {"amount": 3500.0, "currency": "INR"},
+        "due_date": {"spoken": "the 25th", "resolved": "2026-10-25"}
+      }
+    },
+    {
+      "id": "eval-09",
+      "transcript": "I promised boss I will send the quarterly review report by Monday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Boss",
+        "commitment": "send the quarterly review report",
+        "due_date": {"spoken": "Monday", "resolved": "2026-10-19"}
+      }
+    },
+    {
+      "id": "eval-10",
+      "transcript": "Told Neha I would help her prepare for her interview on Sunday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Neha",
+        "commitment": "help her prepare for her interview",
+        "due_date": {"spoken": "Sunday", "resolved": "2026-10-18"}
+      }
+    },
+    {
+      "id": "eval-11",
+      "transcript": "I committed to delivering the mobile app wireframes to client in 3 days.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Client",
+        "commitment": "delivering the mobile app wireframes",
+        "due_date": {"spoken": "in 3 days", "resolved": "2026-10-20"}
+      }
+    },
+    {
+      "id": "eval-12",
+      "transcript": "Promised mom I will call doctor for her appointment tomorrow.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Mom",
+        "commitment": "call doctor for her appointment",
+        "due_date": {"spoken": "tomorrow", "resolved": "2026-10-18"}
+      }
+    },
+    {
+      "id": "eval-13",
+      "transcript": "Rohan promised he will finish the backend migration by next Tuesday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Rohan",
+        "commitment": "finish the backend migration",
+        "due_date": {"spoken": "next Tuesday", "resolved": "2026-10-27"}
+      }
+    },
+    {
+      "id": "eval-14",
+      "transcript": "I told Karan I'd review his pull request by tonight.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Karan",
+        "commitment": "review his pull request",
+        "due_date": {"spoken": "tonight", "resolved": "2026-10-17"}
+      }
+    },
+    {
+      "id": "eval-15",
+      "transcript": "Product demo meeting with stakeholders tomorrow at 4 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Product demo meeting with stakeholders",
+        "date": {"spoken": "tomorrow", "resolved": "2026-10-18"},
+        "time": "4 PM"
+      }
+    },
+    {
+      "id": "eval-16",
+      "transcript": "Doctor appointment on the 25th at 11 AM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Doctor appointment",
+        "date": {"spoken": "the 25th", "resolved": "2026-10-25"},
+        "time": "11 AM"
+      }
+    },
+    {
+      "id": "eval-17",
+      "transcript": "Dinner party with Arjun and Meera on next Saturday at 8 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Dinner party",
+        "date": {"spoken": "next Saturday", "resolved": "2026-10-31"},
+        "time": "8 PM",
+        "people": ["Arjun", "Meera"]
+      }
+    },
+    {
+      "id": "eval-18",
+      "transcript": "Sprint planning session on Monday morning with tech team.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Sprint planning session",
+        "date": {"spoken": "Monday", "resolved": "2026-10-19"},
+        "time": "morning"
+      }
+    },
+    {
+      "id": "eval-19",
+      "transcript": "Annual general meeting on the 30th at 10 AM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Annual general meeting",
+        "date": {"spoken": "the 30th", "resolved": "2026-10-30"},
+        "time": "10 AM"
+      }
+    },
+    {
+      "id": "eval-20",
+      "transcript": "Birthday celebration for Rohit day after tomorrow.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Birthday celebration for Rohit",
+        "date": {"spoken": "day after tomorrow", "resolved": "2026-10-19"},
+        "people": ["Rohit"]
+      }
+    },
+    {
+      "id": "eval-21",
+      "transcript": "Note to self the office Wi-Fi password is YapItSecure2026.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Office Wi-Fi password",
+        "details": "YapItSecure2026"
+      }
+    },
+    {
+      "id": "eval-22",
+      "transcript": "Remember passport expires in December 2028.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Passport expiry",
+        "details": "December 2028"
+      }
+    },
+    {
+      "id": "eval-23",
+      "transcript": "The spare key to garage is hidden under the flowerpot beside the door.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Spare garage key location",
+        "details": "under the flowerpot beside the door"
+      }
+    },
+    {
+      "id": "eval-24",
+      "transcript": "Dr Verma's clinic phone number is 9876543210.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Dr Verma clinic phone number",
+        "details": "9876543210"
+      }
+    },
+    {
+      "id": "eval-25",
+      "transcript": "The server SSH port was changed to 2222 last week.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Server SSH port",
+        "details": "2222"
+      }
+    },
+    {
+      "id": "eval-26",
+      "transcript": "Grocery discount code for online order is SAVE50.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Grocery discount code",
+        "details": "SAVE50"
+      }
+    },
+    {
+      "id": "eval-27",
+      "transcript": "Just feeling a bit tired today and thinking about taking a walk later.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Feeling tired today and thinking about taking a walk later."
+      }
+    },
+    {
+      "id": "eval-28",
+      "transcript": "Random thought what if we rewrote the parser in Rust eventually.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Random thought about rewriting the parser in Rust eventually."
+      }
+    },
+    {
+      "id": "eval-29",
+      "transcript": "Birds singing outside the window on a sunny afternoon.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Birds singing outside the window on a sunny afternoon."
+      }
+    },
+    {
+      "id": "eval-30",
+      "transcript": "Check the tires pressure sometime soon, also buy bread.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Check tire pressure and buy bread."
+      }
+    },
+    {
+      "id": "eval-31",
+      "transcript": "Maybe start reading that sci-fi novel tonight if I finish chores.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Maybe start reading sci-fi novel tonight if chores are finished."
+      }
+    },
+    {
+      "id": "eval-32",
+      "transcript": "Lent 50000 rupees to cousin for his college admission due in 2 weeks.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Cousin",
+        "direction": "they_owe_me",
+        "amount": {"amount": 50000.0, "currency": "INR"},
+        "due_date": {"spoken": "in 2 weeks", "resolved": "2026-10-31"}
+      }
+    },
+    {
+      "id": "eval-33",
+      "transcript": "Promised dad I will book train tickets by tomorrow evening.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Dad",
+        "commitment": "book train tickets",
+        "due_date": {"spoken": "tomorrow", "resolved": "2026-10-18"}
+      }
+    },
+    {
+      "id": "eval-34",
+      "transcript": "Dentist follow up consultation on the 28th at 3 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Dentist follow up consultation",
+        "date": {"spoken": "the 28th", "resolved": "2026-10-28"},
+        "time": "3 PM"
+      }
+    },
+    {
+      "id": "eval-35",
+      "transcript": "The lock combination for the bicycle chain is 4821.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Bicycle lock combination",
+        "details": "4821"
+      }
+    },
+    {
+      "id": "eval-36",
+      "transcript": "Need to pay 1200 rupees electricity bill by end of the month.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "i_owe_them",
+        "amount": {"amount": 1200.0, "currency": "INR"},
+        "due_date": {"spoken": "end of the month", "resolved": "2026-10-31"}
+      }
+    },
+    {
+      "id": "eval-37",
+      "transcript": "Design review workshop with Sunita and Tarun next Wednesday at 2 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Design review workshop",
+        "date": {"spoken": "next Wednesday", "resolved": "2026-10-28"},
+        "time": "2 PM",
+        "people": ["Sunita", "Tarun"]
+      }
+    },
+    {
+      "id": "eval-38",
+      "transcript": "I promised myself to meditate 15 minutes every morning.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Myself",
+        "commitment": "meditate 15 minutes every morning"
+      }
+    },
+    {
+      "id": "eval-39",
+      "transcript": "Car service booking number is MH02-9988.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Car service booking number",
+        "details": "MH02-9988"
+      }
+    },
+    {
+      "id": "eval-40",
+      "transcript": "Thinking about whether we should switch our team lunches to Thursdays.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Thinking about switching team lunches to Thursdays."
+      }
+    }
+  ]
+}
+
