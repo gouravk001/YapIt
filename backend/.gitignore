@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables & secrets
+.env
+!.env.example
+
+# SQLite database & local storage
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+yapit.db
+
+# Testing & linting caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Temporary audio files & scratch
+*.tmp
+*.wav
+*.mp3
+*.webm
+*.ogg
+*.m4a
+/tmp/
+
+# Model checkpoints & cache
+models/
+huggingface/
+.cache/
+

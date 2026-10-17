@@ -3,24 +3,24 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import av
+
+from app.errors import TranscriptionError
 from app.providers.base import Transcriber
 
 logger = logging.getLogger(__name__)
 
 # PyAV 19.0.0+ removed the 'metadata_errors' parameter from av.open()
 # which faster-whisper passes in decode_audio(). This shim ensures compatibility.
-try:
-    import av
+_orig_av_open = av.open
 
-    _orig_av_open = av.open
 
-    def _compat_av_open(*args: Any, **kwargs: Any) -> Any:
-        kwargs.pop("metadata_errors", None)
-        return _orig_av_open(*args, **kwargs)
+def _compat_av_open(*args: Any, **kwargs: Any) -> Any:
+    kwargs.pop("metadata_errors", None)
+    return _orig_av_open(*args, **kwargs)
 
-    av.open = _compat_av_open
-except Exception:
-    pass
+
+av.open = _compat_av_open
 
 
 class WhisperProvider(Transcriber):
@@ -60,5 +60,8 @@ class WhisperProvider(Transcriber):
             )
 
     def transcribe(self, audio_path: str) -> str:
-        segments, _ = self._model.transcribe(audio_path)
-        return " ".join(segment.text.strip() for segment in segments)
+        try:
+            segments, _ = self._model.transcribe(audio_path)
+            return " ".join(segment.text.strip() for segment in segments)
+        except av.error.FFmpegError as exc:
+            raise TranscriptionError("The uploaded audio could not be decoded.") from exc

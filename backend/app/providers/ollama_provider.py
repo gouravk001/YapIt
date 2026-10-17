@@ -6,6 +6,7 @@ import logging
 import ollama  # type: ignore[import-untyped]
 
 from app.config.models_config import ModelEntry
+from app.errors import ModelUnavailableError
 from app.providers.base import LLM
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,16 @@ class OllamaProvider(LLM):
         if json_schema is not None:
             kwargs["format"] = json_schema
 
-        response = ollama.generate(**kwargs)
+        try:
+            response = ollama.generate(**kwargs)
+        except ConnectionError as exc:
+            raise ModelUnavailableError(
+                "Cannot reach Ollama. Check that the Ollama service is running."
+            ) from exc
+        except ollama.ResponseError as exc:
+            raise ModelUnavailableError(
+                f"Ollama could not run model {self._model_name!r}: {exc.error}"
+            ) from exc
         raw: str = response["response"]
 
         if json_schema is not None:

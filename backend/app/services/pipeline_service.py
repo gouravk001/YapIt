@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import Any
 from uuid import uuid4
 
-from fastapi import Request
-
 from app.api.models import NoteEnvelope
 from app.config.types_config import TypeDefinition
+from app.errors import UnknownTypeError
 from app.pipeline.classify import classify
 from app.pipeline.extract import extract
 from app.pipeline.resolve import resolve
@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 class PipelineService:
+    """Runs the note pipeline. Model calls block, so each public method runs in a worker thread
+    to keep the event loop free for other requests."""
+
     def __init__(
         self,
         transcriber: Transcriber,
@@ -30,25 +33,27 @@ class PipelineService:
         self._types = types
         self._type_map = {t.name: t for t in types}
 
-    async def process_audio(
-        self,
-        audio_path: str,
-        captured_at: str,
-        timezone: str,
-        request: Request | None = None,
+    async def process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
+        return await asyncio.to_thread(self._process_audio, audio_path, captured_at, timezone)
+
+    async def process_text(self, transcript: str, captured_at: str, timezone: str) -> NoteEnvelope:
+        return await asyncio.to_thread(self._process_text, transcript, captured_at, timezone)
+
+    async def retype(
+        self, transcript: str, type_name: str, captured_at: str, timezone: str
     ) -> NoteEnvelope:
+        type_def = self._type_map.get(type_name)
+        if not type_def:
+            raise UnknownTypeError(f"Unknown note type: {type_name!r}")
+        return await asyncio.to_thread(self._retype, transcript, type_def, captured_at, timezone)
+
+    def _process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
         t0 = time.perf_counter()
         transcript = self._transcriber.transcribe(audio_path)
         logger.info("Transcribe completed in %.3fs: %r", time.perf_counter() - t0, transcript[:60])
-        return await self.process_text(transcript, captured_at, timezone, request)
+        return self._process_text(transcript, captured_at, timezone)
 
-    async def process_text(
-        self,
-        transcript: str,
-        captured_at: str,
-        timezone: str,
-        request: Request | None = None,
-    ) -> NoteEnvelope:
+    def _process_text(self, transcript: str, captured_at: str, timezone: str) -> NoteEnvelope:
         # Step 1: Classify
         t1 = time.perf_counter()
         type_def = classify(transcript, self._types, self._llm)
@@ -96,18 +101,9 @@ class PipelineService:
             missing_fields=missing,
         )
 
-    async def retype(
-        self,
-        transcript: str,
-        type_name: str,
-        captured_at: str,
-        timezone: str,
-        request: Request | None = None,
+    def _retype(
+        self, transcript: str, type_def: TypeDefinition, captured_at: str, timezone: str
     ) -> NoteEnvelope:
-        type_def = self._type_map.get(type_name)
-        if not type_def:
-            raise ValueError(f"Unknown note type: {type_name!r}")
-
         raw_fields = extract(transcript, type_def, self._llm)
         summary = self._build_summary(raw_fields, type_def.name, transcript)
         resolved = resolve(raw_fields, type_def, timezone, captured_at)

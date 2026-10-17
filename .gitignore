@@ -1,0 +1,4 @@
+# Tool caches created when linters run from the project root
+.ruff_cache/
+.pytest_cache/
+__pycache__/

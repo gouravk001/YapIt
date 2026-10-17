@@ -167,17 +167,24 @@ async def delete_note(note_id: str, db_path: str | None = None) -> bool:
         return cursor.rowcount > 0
 
 
+async def get_type_definition(
+    name: str, version: int, db_path: str | None = None
+) -> dict[str, Any] | None:
+    query = "SELECT definition FROM note_types WHERE name = ? AND version = ?;"
+    async with get_db_connection(db_path) as db:
+        async with db.execute(query, (name, version)) as cursor:
+            row = await cursor.fetchone()
+            return json.loads(row["definition"]) if row else None
+
+
 async def upsert_type(
     name: str, version: int, definition: dict[str, Any], db_path: str | None = None
 ) -> None:
     query = """
         INSERT INTO note_types (name, version, definition)
         VALUES (?, ?, ?)
-        ON CONFLICT(name) DO UPDATE SET
-            version = excluded.version,
-            definition = excluded.definition;
+        ON CONFLICT(name, version) DO UPDATE SET definition = excluded.definition;
     """
     async with get_db_connection(db_path) as db:
         await db.execute(query, (name, version, json.dumps(definition)))
         await db.commit()
-

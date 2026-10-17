@@ -44,4 +44,3 @@ class NoteService:
 
     async def delete_note(self, note_id: str) -> bool:
         return await queries.delete_note(note_id, db_path=self._db_path)
-

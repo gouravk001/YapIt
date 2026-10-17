@@ -59,11 +59,13 @@ async def init_db(db_path: str | None = None) -> None:
             );
             """)
 
+        await _drop_unversioned_note_types(db)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS note_types (
-                name TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
                 version INTEGER NOT NULL,
-                definition TEXT NOT NULL
+                definition TEXT NOT NULL,
+                PRIMARY KEY (name, version)
             );
             """)
 
@@ -104,3 +106,15 @@ async def init_db(db_path: str | None = None) -> None:
 
         await db.commit()
     logger.info("Database initialized successfully")
+
+
+async def _drop_unversioned_note_types(db: aiosqlite.Connection) -> None:
+    """Drop a note_types table from before versioning, where name alone was the key.
+
+    It only ever held rows seeded from types.yaml, so startup seeding rebuilds it.
+    """
+    async with db.execute("PRAGMA table_info(note_types);") as cursor:
+        key_columns = [row["name"] for row in await cursor.fetchall() if row["pk"]]
+    if key_columns == ["name"]:
+        logger.info("Migrating note_types to versioned schema")
+        await db.execute("DROP TABLE note_types;")

@@ -175,6 +175,27 @@ To register a fine-tuned model:
 | `backend/config/models.yaml` | Model registry and active model selection. |
 | `backend/.env` | Host, port, DB path, config dir path. |
 
+**Changing a type:** edits to a type's `description` or `examples` apply in place. Adding, removing or changing its `fields` requires bumping its `version`; the backend refuses to start otherwise. Every version is kept in the `note_types` table, so saved notes keep the definition they were created with.
+
+---
+
+## API errors
+
+Every error response has the same shape:
+
+```json
+{ "error": "NotFound", "detail": "Note 'abc' not found." }
+```
+
+| Status | `error` | When |
+|---|---|---|
+| 400 | `UnknownType` | Retype with a type name not in `types.yaml` |
+| 404 | `NotFound` | Note or route does not exist |
+| 422 | `ValidationError` | Request body or form fields are missing or invalid |
+| 422 | `TranscriptionFailed` | Uploaded audio could not be decoded |
+| 503 | `ModelUnavailable` | Ollama is not running or the model is not pulled |
+| 500 | `InternalServerError` | Anything unexpected (details go to the server log, not the client) |
+
 ---
 
 ## Project layout

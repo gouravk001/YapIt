@@ -5,17 +5,17 @@ import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from app.api import model_routes, notes, types
+from app.api.error_handlers import register_error_handlers
 from app.config.loader import load_model_registry, load_types
 from app.providers.factory import create_providers
 from app.services.note_service import NoteService
 from app.services.pipeline_service import PipelineService
+from app.services.type_service import seed_types
 from app.storage.database import init_db
-from app.storage.queries import upsert_type
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,9 +33,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     registry = load_model_registry()
     type_definitions = load_types()
 
-    # Seed types into the DB
-    for td in type_definitions:
-        await upsert_type(td.name, td.version, td.model_dump(), db_path=db_path)
+    await seed_types(type_definitions, db_path)
 
     # Initialize model providers (faster-whisper and ollama)
     transcriber, llm = create_providers(registry)
@@ -60,6 +58,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+register_error_handlers(app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -71,15 +70,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled error processing request to %s", request.url.path)
-    return JSONResponse(
-        status_code=500,
-        content={"error": "InternalServerError", "detail": str(exc)},
-    )
 
 
 app.include_router(notes.router)
