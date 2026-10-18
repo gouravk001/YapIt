@@ -1,0 +1,2571 @@
+{
+  "model_id": "llama3.2-3b",
+  "label": "Llama 3.2 3B",
+  "tag": "llama3.2:3b",
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_ctx": 4096,
+    "num_predict": 400,
+    "think": null
+  },
+  "started_at": "2026-10-18T18:58:58",
+  "finished_at": "2026-10-18T19:02:08",
+  "counters": {
+    "llm_calls": 430,
+    "malformed_replies": 0,
+    "vram_model_mb": 2634,
+    "load_seconds": 2.3997396180002397
+  },
+  "summary": {
+    "classification_accuracy": 0.8571428571428571,
+    "per_type": {
+      "payment": 0.7380952380952381,
+      "promise": 1.0,
+      "event": 0.9629629629629629,
+      "info": 1.0,
+      "general": 1.0,
+      "not_a_note": 0.6875
+    },
+    "per_category": {
+      "payment": 0.6,
+      "promise": 1.0,
+      "event": 1.0,
+      "info": 1.0,
+      "general": 1.0,
+      "non_note": 0.6875,
+      "unreasonable": 1.0,
+      "direction": 0.6842105263157895,
+      "dates": 1.0,
+      "amounts": 0.9,
+      "ordinary": 0.9
+    },
+    "note_gate_recall": 0.6875,
+    "notes_wrongly_rejected": 0.0,
+    "field_accuracy": 0.8152173913043478,
+    "free_text_exact": 0.5789473684210527,
+    "per_field": {
+      "payment.person": 1.0,
+      "payment.direction": 0.5952380952380952,
+      "payment.amount": 0.7,
+      "payment.due_date": 0.9285714285714286,
+      "promise.person": 0.7692307692307693,
+      "promise.commitment": 0.5,
+      "promise.due_date": 1.0,
+      "event.title": 0.875,
+      "event.date": 0.9473684210526315,
+      "event.time": 1.0,
+      "event.people": 1.0,
+      "info.topic": 0.625,
+      "info.details": 0.625,
+      "general.content": 0.16666666666666666
+    },
+    "direction_accuracy": 0.5952380952380952,
+    "amount_accuracy": 0.7,
+    "date_accuracy": 0.9545454545454546,
+    "warning_recall": 0.9166666666666666,
+    "false_warning_rate": 0.06593406593406594,
+    "malformed_reply_rate": 0.0,
+    "errored_cases": [],
+    "mean_latency_s": 1.5738262870587783,
+    "p95_latency_s": 2.183309878999353,
+    "stage_mean_s": {
+      "classify": 0.21439136900838804,
+      "extract": 0.3557406430740802,
+      "refine": 0.9509376898611713,
+      "check": 0.19113335890731126
+    },
+    "vram_peak_mb": 2634
+  },
+  "outcomes": [
+    {
+      "case_id": "eval-01",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Ravi",
+        "commitment": "pay 500 rupees",
+        "due_date": {
+          "spoken": "next Friday",
+          "resolved": "2026-10-30"
+        }
+      },
+      "warnings": [],
+      "latency_s": 2.0313772059998882,
+      "stage_s": {
+        "classify": 0.34138027599965426,
+        "extract": 0.39914544400016894,
+        "refine": 1.0601831310004854,
+        "check": 0.22970766099933826
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-02",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Rahul",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "yesterday",
+          "resolved": "2026-10-16"
+        },
+        "note": "dinner we had yesterday"
+      },
+      "warnings": [],
+      "latency_s": 2.308736386000419,
+      "stage_s": {
+        "classify": 0.2146826409998539,
+        "extract": 0.5507831159993657,
+        "refine": 1.3219993750008143,
+        "check": 0.2211722539996117
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-03",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Aman",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 150000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "the laptop he purchased from me"
+      },
+      "warnings": [],
+      "latency_s": 2.37811135299944,
+      "stage_s": {
+        "classify": 0.2198956009997346,
+        "extract": 0.5131120079995526,
+        "refine": 1.435385108000446,
+        "check": 0.20963845099959144
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-04",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Priya",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 5000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "office supplies"
+      },
+      "warnings": [],
+      "latency_s": 2.1112899770005242,
+      "stage_s": {
+        "classify": 0.20037072699960845,
+        "extract": 0.44444430000021384,
+        "refine": 1.2346258110001145,
+        "check": 0.2317989060002219
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-05",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Suresh",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 50.0,
+          "currency": "USD"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8109272499996223,
+      "stage_s": {
+        "classify": 0.20925157500005298,
+        "extract": 0.3546308229997521,
+        "refine": 1.0388127520000126,
+        "check": 0.2081772559995443
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-06",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Vikram",
+        "commitment": "return ₹2,000",
+        "due_date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.9327149609998742,
+      "stage_s": {
+        "classify": 0.20178361299986136,
+        "extract": 0.40007601200068166,
+        "refine": 1.12633612099944,
+        "check": 0.20445104900045408
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-07",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Deepak",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 10000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8401496530004806,
+      "stage_s": {
+        "classify": 0.21125261899942416,
+        "extract": 0.45388623800045025,
+        "refine": 0.9708692359999986,
+        "check": 0.20406057000036526
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-08",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Ananya",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 3500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 25th",
+          "resolved": "2026-10-25"
+        }
+      },
+      "warnings": [],
+      "latency_s": 2.183309878999353,
+      "stage_s": {
+        "classify": 0.21591323899974668,
+        "extract": 0.4896549889999733,
+        "refine": 1.2680903509999553,
+        "check": 0.209583830000156
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-09",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Boss",
+        "commitment": "send the quarterly review report",
+        "due_date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.5134366020001835,
+      "stage_s": {
+        "classify": 0.19842462900032842,
+        "extract": 0.33029663900015294,
+        "refine": 0.7830118559995753,
+        "check": 0.2016502140004377
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-10",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Neha",
+        "commitment": "help prepare for interview",
+        "due_date": {
+          "spoken": "Sunday",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.540688209000109,
+      "stage_s": {
+        "classify": 0.1991994509999131,
+        "extract": 0.3451669189998938,
+        "refine": 0.7757983379997313,
+        "check": 0.2204427120004766
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-11",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Client",
+        "commitment": "deliver the mobile app wireframes",
+        "due_date": {
+          "spoken": "in 3 days",
+          "resolved": "2026-10-20"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.7166727550002179,
+      "stage_s": {
+        "classify": 0.20164622100037377,
+        "extract": 0.37585810600012337,
+        "refine": 0.9130602819996056,
+        "check": 0.22605475500040484
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-12",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Mom",
+        "commitment": "call the doctor",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.4526290510002582,
+      "stage_s": {
+        "classify": 0.2023062949992891,
+        "extract": 0.3265995940000721,
+        "refine": 0.7227835500007131,
+        "check": 0.200710266999522
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-13",
+      "actual_type": "promise",
+      "fields": {
+        "person": null,
+        "commitment": "finish the backend migration",
+        "due_date": {
+          "spoken": "next Tuesday",
+          "resolved": "2026-10-27"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6089550939996116,
+      "stage_s": {
+        "classify": 0.20066098000006605,
+        "extract": 0.3422559589998855,
+        "refine": 0.8551336760001504,
+        "check": 0.21084093899935397
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-14",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Karan",
+        "commitment": "review the pull request",
+        "due_date": {
+          "spoken": "tonight",
+          "resolved": "2026-10-17"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6378028429999176,
+      "stage_s": {
+        "classify": 0.2016728630005673,
+        "extract": 0.3425764129997333,
+        "refine": 0.8897895959999005,
+        "check": 0.20370310100042843
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-15",
+      "actual_type": "event",
+      "fields": {
+        "title": "Product demo meeting",
+        "date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        },
+        "time": "4:00 PM",
+        "people": [
+          "Stakeholders"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.9914995589997488,
+      "stage_s": {
+        "classify": 0.23330812499989406,
+        "extract": 0.37458544300079666,
+        "refine": 1.1803187010000329,
+        "check": 0.20323587299935753
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-16",
+      "actual_type": "event",
+      "fields": {
+        "title": "Doctor appointment",
+        "date": {
+          "spoken": "25th",
+          "resolved": "2026-10-25"
+        },
+        "time": "11:00 AM",
+        "people": [
+          "Doctor"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.859388941999896,
+      "stage_s": {
+        "classify": 0.21240756400038663,
+        "extract": 0.34507895699971414,
+        "refine": 1.095518343000549,
+        "check": 0.20628849399963656
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-17",
+      "actual_type": "event",
+      "fields": {
+        "title": "Dinner party",
+        "date": {
+          "spoken": "next Saturday",
+          "resolved": "2026-10-24"
+        },
+        "time": "8:00 PM",
+        "people": [
+          "Arjun",
+          "Meera"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 2.070253989999401,
+      "stage_s": {
+        "classify": 0.21301889000005758,
+        "extract": 0.45402448999993794,
+        "refine": 1.2034875760000432,
+        "check": 0.19964348699977563
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-18",
+      "actual_type": "event",
+      "fields": {
+        "title": "Sprint planning session",
+        "date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        },
+        "time": "morning",
+        "people": [
+          "Tech Team"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.7123380799994266,
+      "stage_s": {
+        "classify": 0.20976279900060035,
+        "extract": 0.3886253009995926,
+        "refine": 0.904591874000289,
+        "check": 0.2093030979995092
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-19",
+      "actual_type": "event",
+      "fields": {
+        "title": "Annual general meeting",
+        "date": {
+          "spoken": "30th",
+          "resolved": "2026-10-30"
+        },
+        "time": "10:00 AM",
+        "people": [
+          "Neha",
+          "Arjun",
+          "Sara"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 2.0894862900004227,
+      "stage_s": {
+        "classify": 0.20643676000054256,
+        "extract": 0.3583079789996191,
+        "refine": 1.3222141300002477,
+        "check": 0.2024570510002377
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-20",
+      "actual_type": "event",
+      "fields": {
+        "title": "Birthday celebration for Rohit",
+        "date": {
+          "spoken": "day after tomorrow",
+          "resolved": "2026-10-19"
+        },
+        "time": "next day",
+        "people": [
+          "Rohit"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.6953498060001948,
+      "stage_s": {
+        "classify": 0.21615809600007196,
+        "extract": 0.26882913400004327,
+        "refine": 1.00538388699988,
+        "check": 0.204917263000425
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-21",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Office Wi-Fi password",
+        "details": "YapItSecure2026"
+      },
+      "warnings": [],
+      "latency_s": 1.514527919000102,
+      "stage_s": {
+        "classify": 0.20208286300021427,
+        "extract": 0.3121133109998482,
+        "refine": 0.8015166160002991,
+        "check": 0.19874778800021886
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-22",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Passport expiration",
+        "details": "My passport expires in December 2028, so I will renew it by December 2028"
+      },
+      "warnings": [],
+      "latency_s": 1.637323545000072,
+      "stage_s": {
+        "classify": 0.20843920699917362,
+        "extract": 0.2550632790007512,
+        "refine": 0.9594722100000581,
+        "check": 0.21428515799925663
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-23",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Spare key location",
+        "details": "hidden under the flowerpot beside the door"
+      },
+      "warnings": [],
+      "latency_s": 1.3627454389998093,
+      "stage_s": {
+        "classify": 0.20204918600029487,
+        "extract": 0.31073596399983217,
+        "refine": 0.6415315040003406,
+        "check": 0.20836207999946055
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-24",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Dr Verma's clinic phone number",
+        "details": "9876543210"
+      },
+      "warnings": [],
+      "latency_s": 1.4865752010000506,
+      "stage_s": {
+        "classify": 0.21052087000043684,
+        "extract": 0.2970999179997307,
+        "refine": 0.7684526459997869,
+        "check": 0.21033908200024598
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-25",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Server SSH port",
+        "details": "The server SSH port was changed to 2222 last week, so I will update the port to 2222."
+      },
+      "warnings": [],
+      "latency_s": 1.6829792969992923,
+      "stage_s": {
+        "classify": 0.20047637300012866,
+        "extract": 0.23400112000035733,
+        "refine": 1.0444197169999825,
+        "check": 0.2039648659992963
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-26",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Grocery discount code",
+        "details": "SAVE50"
+      },
+      "warnings": [],
+      "latency_s": 1.2895837589994699,
+      "stage_s": {
+        "classify": 0.20190930800072238,
+        "extract": 0.23798192300000665,
+        "refine": 0.6442100109998137,
+        "check": 0.20541237499946874
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-27",
+      "actual_type": "general",
+      "fields": {
+        "content": "I am feeling tired today and thinking about taking a walk later."
+      },
+      "warnings": [],
+      "latency_s": 1.3719152980002036,
+      "stage_s": {
+        "classify": 0.20502480100003595,
+        "extract": 0.30303739400005725,
+        "refine": 0.6658193729999766,
+        "check": 0.19796650599982968
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-28",
+      "actual_type": "general",
+      "fields": {
+        "content": "Random thought what if we rewrote the parser in Rust eventually."
+      },
+      "warnings": [],
+      "latency_s": 1.161748928999259,
+      "stage_s": {
+        "classify": 0.2057879869998942,
+        "extract": 0.26108377400032623,
+        "refine": 0.5007254740003191,
+        "check": 0.19409994999932678
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-29",
+      "actual_type": "general",
+      "fields": {
+        "content": "Birds singing outside the window on a sunny afternoon."
+      },
+      "warnings": [],
+      "latency_s": 1.3014455570000791,
+      "stage_s": {
+        "classify": 0.20573879899984604,
+        "extract": 0.24352511300003243,
+        "refine": 0.6558833299995968,
+        "check": 0.1962345620004271
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-30",
+      "actual_type": "general",
+      "fields": {
+        "content": "Check the tires pressure sometime soon, also buy bread."
+      },
+      "warnings": [],
+      "latency_s": 1.2686930180007039,
+      "stage_s": {
+        "classify": 0.201443480999842,
+        "extract": 0.2427291130006779,
+        "refine": 0.6258875419998731,
+        "check": 0.19856387700019695
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-31",
+      "actual_type": "general",
+      "fields": {
+        "content": "Maybe start reading that sci-fi novel tonight if I finish chores."
+      },
+      "warnings": [],
+      "latency_s": 1.3047296380000262,
+      "stage_s": {
+        "classify": 0.2013323009996384,
+        "extract": 0.2632693890000155,
+        "refine": 0.6398198340002637,
+        "check": 0.20022970999980316
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-32",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Cousin",
+        "commitment": "college admission",
+        "due_date": {
+          "spoken": "in 2 weeks",
+          "resolved": "2026-10-31"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.7749170159995629,
+      "stage_s": {
+        "classify": 0.2054694290000043,
+        "extract": 0.35797196900057315,
+        "refine": 1.0040902949995143,
+        "check": 0.20732689699980256
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-33",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Dad",
+        "commitment": "book train tickets",
+        "due_date": {
+          "spoken": "tomorrow evening",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.5194399940000949,
+      "stage_s": {
+        "classify": 0.20803117000014026,
+        "extract": 0.3395794210000531,
+        "refine": 0.7663711539998985,
+        "check": 0.20538916799978324
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-34",
+      "actual_type": "event",
+      "fields": {
+        "title": "Dentist follow up consultation",
+        "date": {
+          "spoken": "28th",
+          "resolved": "2026-10-28"
+        },
+        "time": "3:00 PM",
+        "people": [
+          "Nandini"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.9251568790004967,
+      "stage_s": {
+        "classify": 0.2138606520002213,
+        "extract": 0.3673912570002358,
+        "refine": 1.1370133789996544,
+        "check": 0.20684196500042162
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-35",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Bicycle lock combination",
+        "details": "4821"
+      },
+      "warnings": [],
+      "latency_s": 1.3060296189996734,
+      "stage_s": {
+        "classify": 0.2019593459999669,
+        "extract": 0.24112786400019104,
+        "refine": 0.6618913610000163,
+        "check": 0.20098911599961866
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-36",
+      "actual_type": "event",
+      "fields": {
+        "title": "Pay electricity bill",
+        "date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        },
+        "people": [
+          "Electricity Company"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8385122370000317,
+      "stage_s": {
+        "classify": 0.20446679999986372,
+        "extract": 0.33528709700021864,
+        "refine": 1.0884373810004035,
+        "check": 0.2102652309995392
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-37",
+      "actual_type": "event",
+      "fields": {
+        "title": "Design review workshop",
+        "date": {
+          "spoken": "next Wednesday",
+          "resolved": "2026-10-28"
+        },
+        "time": "2:00 PM",
+        "people": [
+          "Sunita",
+          "Tarun"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.922705771999972,
+      "stage_s": {
+        "classify": 0.21453681099956157,
+        "extract": 0.46951035500023863,
+        "refine": 1.0322489509999286,
+        "check": 0.2063562829998773
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-38",
+      "actual_type": "promise",
+      "fields": {
+        "person": null,
+        "commitment": "meditate 15 minutes every morning",
+        "due_date": {
+          "spoken": "every morning",
+          "resolved": null
+        }
+      },
+      "warnings": [
+        "Couldn't work out a date from “every morning”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.4487419289998797,
+      "stage_s": {
+        "classify": 0.20153299100002187,
+        "extract": 0.28750447599941253,
+        "refine": 0.959407057000135,
+        "check": 0.0001907699997900636
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-39",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Car service booking number",
+        "details": "MH02-9988"
+      },
+      "warnings": [],
+      "latency_s": 1.4041080970000621,
+      "stage_s": {
+        "classify": 0.2366068319997794,
+        "extract": 0.2800315349995799,
+        "refine": 0.6902513100003489,
+        "check": 0.19714681700043002
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-40",
+      "actual_type": "general",
+      "fields": {
+        "content": "Thinking about whether we should switch our team lunches to Thursdays."
+      },
+      "warnings": [],
+      "latency_s": 1.21533198599991,
+      "stage_s": {
+        "classify": 0.20266510300007212,
+        "extract": 0.26578168100058974,
+        "refine": 0.5483733470000516,
+        "check": 0.1984531079997396
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-41",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.21063933200002793,
+      "stage_s": {
+        "classify": 0.21058230299968272
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-42",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.21666306699989946,
+      "stage_s": {
+        "classify": 0.21660982299999887
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-43",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.20549374999973224,
+      "stage_s": {
+        "classify": 0.20544224199966266
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-44",
+      "actual_type": "general",
+      "fields": {
+        "content": "Play some relaxing music."
+      },
+      "warnings": [],
+      "latency_s": 0.9670830559998649,
+      "stage_s": {
+        "classify": 0.1841122659998291,
+        "extract": 0.1743352829998912,
+        "refine": 0.40864018200045393,
+        "check": 0.19994369199957873
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-45",
+      "actual_type": "general",
+      "fields": {
+        "content": "Never mind"
+      },
+      "warnings": [],
+      "latency_s": 1.157528720999835,
+      "stage_s": {
+        "classify": 0.1999946079995425,
+        "extract": 0.14724730699981592,
+        "refine": 0.6062553250003475,
+        "check": 0.20395283600009861
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-46",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.27487149399985356,
+      "stage_s": {
+        "classify": 0.2748059089999515
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-47",
+      "actual_type": "event",
+      "fields": {
+        "title": "my cousin's wedding",
+        "date": {
+          "spoken": "after 40 years",
+          "resolved": "2066-10-17"
+        },
+        "people": [
+          "My Cousin"
+        ]
+      },
+      "warnings": [
+        "Date is about 40 years away (Sun 17 Oct 2066)."
+      ],
+      "latency_s": 1.6468419230004656,
+      "stage_s": {
+        "classify": 0.18058984900017094,
+        "extract": 0.43110807399989426,
+        "refine": 1.0348506620002809,
+        "check": 0.00023784800032444764
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-48",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Rahul",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 900000000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next month",
+          "resolved": null
+        },
+        "note": "samosas"
+      },
+      "warnings": [
+        "₹90,00,00,000 is unusually large for a note.",
+        "Couldn't work out a date from “next month”. Pick one or leave it empty."
+      ],
+      "latency_s": 2.1217797780000183,
+      "stage_s": {
+        "classify": 0.2419137189999674,
+        "extract": 0.4886326489995554,
+        "refine": 1.3909770380005284,
+        "check": 0.00020598399987648008
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-49",
+      "actual_type": "event",
+      "fields": {
+        "title": "Team meeting",
+        "date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        },
+        "time": "25 PM",
+        "people": [
+          "Rahul",
+          "Sara",
+          "Karan"
+        ]
+      },
+      "warnings": [
+        "PM is not a valid time of day"
+      ],
+      "latency_s": 1.9760597479998978,
+      "stage_s": {
+        "classify": 0.242132469000353,
+        "extract": 0.3805387550000887,
+        "refine": 1.0534016780002275,
+        "check": 0.2999240919998556
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-50",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Arjun",
+        "commitment": "run a full marathon in 10 minutes",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [
+        "running a full marathon in 10 minutes is physically impossible for a human"
+      ],
+      "latency_s": 1.780866561000039,
+      "stage_s": {
+        "classify": 0.19972579299974313,
+        "extract": 0.34428720899995824,
+        "refine": 0.877684216000489,
+        "check": 0.35909673099922657
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-51",
+      "actual_type": "event",
+      "fields": {
+        "title": "Birthday party for Meera",
+        "date": {
+          "spoken": "the 30th of February",
+          "resolved": null
+        },
+        "people": [
+          "Meera"
+        ]
+      },
+      "warnings": [
+        "Couldn't work out a date from “the 30th of February”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.5641034769996622,
+      "stage_s": {
+        "classify": 0.21250791700003901,
+        "extract": 0.3845677760000399,
+        "refine": 0.9667346429996542,
+        "check": 0.00024988099994516233
+      },
+      "error": null
+    },
+    {
+      "case_id": "eval-52",
+      "actual_type": "event",
+      "fields": {
+        "title": "My flight to Mumbai",
+        "date": {
+          "spoken": "yesterday",
+          "resolved": "2026-10-16"
+        },
+        "time": "6:00 PM",
+        "people": []
+      },
+      "warnings": [
+        "The flight leaves yesterday, which is not possible since today is Saturday, October 17, 2026."
+      ],
+      "latency_s": 2.008677288999934,
+      "stage_s": {
+        "classify": 0.2472074600000269,
+        "extract": 0.3512424769996869,
+        "refine": 0.9681131899997126,
+        "check": 0.4420433600007527
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-01",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Kabir",
+        "commitment": "return ₹2,000",
+        "due_date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6719572669999252,
+      "stage_s": {
+        "classify": 0.20187259099930088,
+        "extract": 0.3659800670002369,
+        "refine": 0.8998162560001219,
+        "check": 0.20418690299993614
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-02",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Neha",
+        "commitment": "lend ₹300 for lunch",
+        "due_date": {
+          "spoken": "next Friday",
+          "resolved": "2026-10-30"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6912028480001027,
+      "stage_s": {
+        "classify": 0.2021340439996493,
+        "extract": 0.29356263400040916,
+        "refine": 0.9927942479998819,
+        "check": 0.20265998800005036
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-03",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Arjun",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 1500.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.795105424999747,
+      "stage_s": {
+        "classify": 0.21358206600052654,
+        "extract": 0.33491982699979417,
+        "refine": 1.0372297610001624,
+        "check": 0.20931633799955307
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-04",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Sameer",
+        "commitment": "borrow ₹800",
+        "due_date": {
+          "spoken": "last week",
+          "resolved": null
+        }
+      },
+      "warnings": [
+        "Couldn't work out a date from “last week”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.3349829230000978,
+      "stage_s": {
+        "classify": 0.1993752600001244,
+        "extract": 0.34257125099975383,
+        "refine": 0.7927407930001209,
+        "check": 0.00024154200036718976
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-05",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Meena",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.9302930940002625,
+      "stage_s": {
+        "classify": 0.2463314189999437,
+        "extract": 0.4500592640006289,
+        "refine": 1.0271540039993852,
+        "check": 0.20669871200061607
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-06",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Rohan",
+        "commitment": "pay ₹1,200",
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8082784360003643,
+      "stage_s": {
+        "classify": 0.20336135599973204,
+        "extract": 0.42900087500038353,
+        "refine": 0.9687840070000675,
+        "check": 0.20707996700002695
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-07",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Suresh",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 450.0,
+          "currency": "INR"
+        },
+        "note": "for the vegetables"
+      },
+      "warnings": [],
+      "latency_s": 1.7805197869993208,
+      "stage_s": {
+        "classify": 0.21447735499987175,
+        "extract": 0.3554431359998489,
+        "refine": 1.0004908410001008,
+        "check": 0.21006817599936767
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-08",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Anjali",
+        "commitment": "pay ₹3,000 for the tickets",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.908100507999734,
+      "stage_s": {
+        "classify": 0.2003140849992633,
+        "extract": 0.4004700129999037,
+        "refine": 1.0884630400005335,
+        "check": 0.218811765999817
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-09",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Lakshmi",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 4000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 5th",
+          "resolved": "2026-11-05"
+        }
+      },
+      "warnings": [],
+      "latency_s": 2.183823045999816,
+      "stage_s": {
+        "classify": 0.2175903190000099,
+        "extract": 0.507588938000481,
+        "refine": 1.2397371910001311,
+        "check": 0.2188157949995002
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-10",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Vivek",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 650.0,
+          "currency": "INR"
+        },
+        "note": "pizza"
+      },
+      "warnings": [],
+      "latency_s": 1.9625526370000443,
+      "stage_s": {
+        "classify": 0.2192526099997849,
+        "extract": 0.41198155700021744,
+        "refine": 1.1223788509996666,
+        "check": 0.20888675100013643
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-11",
+      "actual_type": "payment",
+      "fields": {
+        "person": "My Landlord",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 18000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "this month's end",
+          "resolved": null
+        }
+      },
+      "warnings": [
+        "Couldn't work out a date from “this month's end”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.7510790649994306,
+      "stage_s": {
+        "classify": 0.21548862899999222,
+        "extract": 0.3739478039997266,
+        "refine": 1.1613973149997037,
+        "check": 0.00019623899970611092
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-12",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Karan",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 350.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.7897394960000383,
+      "stage_s": {
+        "classify": 0.2387522290000561,
+        "extract": 0.36654264599928865,
+        "refine": 0.9809250200005408,
+        "check": 0.20346869999957562
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-13",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Isha",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 900.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Sunday",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.7863766669997858,
+      "stage_s": {
+        "classify": 0.2108609480001178,
+        "extract": 0.42559649199938576,
+        "refine": 0.936371230000077,
+        "check": 0.21347711399994296
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-14",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Dad",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 5000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "Return the 5k I took from Dad"
+      },
+      "warnings": [],
+      "latency_s": 2.04795597500015,
+      "stage_s": {
+        "classify": 0.2126994009995542,
+        "extract": 0.3802553040004568,
+        "refine": 1.2398471589995097,
+        "check": 0.21504686300067988
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-15",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Manoj",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 200000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "the car he bought from me"
+      },
+      "warnings": [],
+      "latency_s": 2.350893466999878,
+      "stage_s": {
+        "classify": 0.2140787440002896,
+        "extract": 0.5211569260000033,
+        "refine": 1.405135438999423,
+        "check": 0.21046404000026087
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-16",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Farhan",
+        "commitment": "₹1,000 as a loan",
+        "due_date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8496258499999385,
+      "stage_s": {
+        "classify": 0.2071821079998699,
+        "extract": 0.40101942799992685,
+        "refine": 1.0347044430000096,
+        "check": 0.20667482699991524
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-17",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Pooja",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 600.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next",
+          "resolved": null
+        },
+        "note": "auto fare"
+      },
+      "warnings": [
+        "Couldn't work out a date from “next”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.7162035950004793,
+      "stage_s": {
+        "classify": 0.20291835799980618,
+        "extract": 0.36602466000022105,
+        "refine": 1.1470032130000618,
+        "check": 0.00021474000004673144
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-18",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Deepak",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "None",
+          "resolved": null
+        },
+        "note": "by mistake, I have to send it back"
+      },
+      "warnings": [
+        "Couldn't work out a date from “None”. Pick one or leave it empty."
+      ],
+      "latency_s": 2.0345270769994386,
+      "stage_s": {
+        "classify": 0.2399857519994839,
+        "extract": 0.6026304189999792,
+        "refine": 1.191448625000703,
+        "check": 0.00041056399913941277
+      },
+      "error": null
+    },
+    {
+      "case_id": "dir-19",
+      "actual_type": "payment",
+      "fields": {
+        "person": "My Brother",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 12000.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8720700329995452,
+      "stage_s": {
+        "classify": 0.2540213889997176,
+        "extract": 0.3751081130003513,
+        "refine": 1.0335442499999772,
+        "check": 0.2093099149997215
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-01",
+      "actual_type": "event",
+      "fields": {
+        "title": "Doctor's appointment",
+        "date": {
+          "spoken": "3 March",
+          "resolved": "2027-03-03"
+        },
+        "time": "10:00 AM",
+        "people": [
+          "Doctor"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.7206045229995652,
+      "stage_s": {
+        "classify": 0.2088085539999156,
+        "extract": 0.3362255100000766,
+        "refine": 0.9667010060002212,
+        "check": 0.20881780599938793
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-02",
+      "actual_type": "event",
+      "fields": {
+        "title": "Mom's birthday dinner",
+        "date": {
+          "spoken": "the 25th of December",
+          "resolved": "2026-12-25"
+        },
+        "time": "next Friday",
+        "people": [
+          "Mom",
+          "Arjun"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8742109940003502,
+      "stage_s": {
+        "classify": 0.21836215399980574,
+        "extract": 0.29695861599975615,
+        "refine": 1.1548073620006107,
+        "check": 0.20401642799970432
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-03",
+      "actual_type": "promise",
+      "fields": {
+        "person": "My Accountant",
+        "commitment": "submit the tax documents",
+        "due_date": {
+          "spoken": "3 months",
+          "resolved": "2027-01-17"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6018741790003332,
+      "stage_s": {
+        "classify": 0.20753069599959417,
+        "extract": 0.3504632340000171,
+        "refine": 0.8380541579999772,
+        "check": 0.2057605350000813
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-04",
+      "actual_type": "event",
+      "fields": {
+        "title": "Team offsite",
+        "date": {
+          "spoken": "next weekend",
+          "resolved": "2026-10-24"
+        },
+        "people": [
+          "Lonavala"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.502902329999415,
+      "stage_s": {
+        "classify": 0.20015741399947728,
+        "extract": 0.35016335000000254,
+        "refine": 0.7451975530002528,
+        "check": 0.20729028299956553
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-05",
+      "actual_type": "event",
+      "fields": {
+        "title": "Parent teacher meeting",
+        "date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        },
+        "time": "9"
+      },
+      "warnings": [],
+      "latency_s": 1.5117252060008468,
+      "stage_s": {
+        "classify": 0.2019144240002788,
+        "extract": 0.34424333900005877,
+        "refine": 0.7586768640003356,
+        "check": 0.20682581900018704
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-06",
+      "actual_type": "event",
+      "fields": {
+        "title": "Call with the Singapore Client",
+        "date": {
+          "spoken": "two weeks from now",
+          "resolved": "2026-10-31"
+        },
+        "people": [
+          "Singapore Client"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8251338169993687,
+      "stage_s": {
+        "classify": 0.22407975499936583,
+        "extract": 0.42143202800070867,
+        "refine": 0.9786702689998492,
+        "check": 0.20090037399950234
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-07",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Bescom",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2300.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 5th",
+          "resolved": "2026-11-05"
+        }
+      },
+      "warnings": [],
+      "latency_s": 2.0288252119999015,
+      "stage_s": {
+        "classify": 0.22002522599996155,
+        "extract": 0.49916513500011206,
+        "refine": 1.0969782560005115,
+        "check": 0.21250247099942499
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-08",
+      "actual_type": "event",
+      "fields": {
+        "title": "Dinner with Kavya",
+        "date": {
+          "spoken": "tonight",
+          "resolved": "2026-10-17"
+        },
+        "time": "8:00 PM",
+        "people": [
+          "Kavya"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.880371345999265,
+      "stage_s": {
+        "classify": 0.19931581200034998,
+        "extract": 0.4700275019995388,
+        "refine": 1.0068024140000489,
+        "check": 0.20412529399982304
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-09",
+      "actual_type": "event",
+      "fields": {
+        "title": "Concert",
+        "date": {
+          "spoken": "1st November",
+          "resolved": "2026-11-01"
+        },
+        "time": "next",
+        "people": [
+          "Ritu",
+          "Sam"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8944794300005015,
+      "stage_s": {
+        "classify": 0.21082039200064173,
+        "extract": 0.3411866739998004,
+        "refine": 1.1343035520003468,
+        "check": 0.2080147799997576
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-10",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Ishaan",
+        "commitment": "send the design files",
+        "due_date": {
+          "spoken": "the day after tomorrow",
+          "resolved": "2026-10-19"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.687617945999591,
+      "stage_s": {
+        "classify": 0.2057957440001701,
+        "extract": 0.3837841260001369,
+        "refine": 0.8908987749991866,
+        "check": 0.20706910700027947
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-11",
+      "actual_type": "event",
+      "fields": {
+        "title": "Flight to Delhi",
+        "date": {
+          "spoken": "in 5 days",
+          "resolved": "2026-10-22"
+        },
+        "people": [
+          "Neha"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.815139174000251,
+      "stage_s": {
+        "classify": 0.20253484599925287,
+        "extract": 0.3489024380005503,
+        "refine": 1.061622393000107,
+        "check": 0.20202736499959428
+      },
+      "error": null
+    },
+    {
+      "case_id": "date-12",
+      "actual_type": "event",
+      "fields": {
+        "title": "Gym membership renewal meeting",
+        "date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        },
+        "time": "6 pm",
+        "people": [
+          "The Gym"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8161542039997585,
+      "stage_s": {
+        "classify": 0.19912822999958735,
+        "extract": 0.3879304090005462,
+        "refine": 1.0232625979997465,
+        "check": 0.20578112099974533
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-01",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Sunil",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "groceries"
+      },
+      "warnings": [],
+      "latency_s": 2.0469964909998453,
+      "stage_s": {
+        "classify": 0.21429479900052684,
+        "extract": 0.4254357110003184,
+        "refine": 1.198416169999291,
+        "check": 0.20876658799988945
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-02",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Priyanka",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 125000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "for the laptop"
+      },
+      "warnings": [],
+      "latency_s": 2.2606344329997228,
+      "stage_s": {
+        "classify": 0.2169299740007773,
+        "extract": 0.44131952799943974,
+        "refine": 1.3948037919999479,
+        "check": 0.20751535900035378
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-03",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Raj",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 15000.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.8549647130002995,
+      "stage_s": {
+        "classify": 0.22622149800008629,
+        "extract": 0.37041992299964477,
+        "refine": 1.0516016580004361,
+        "check": 0.20666894700025296
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-04",
+      "actual_type": "payment",
+      "fields": {
+        "person": "The Builder",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 50000.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.9117584019995775,
+      "stage_s": {
+        "classify": 0.20914477800033637,
+        "extract": 0.37653010499980155,
+        "refine": 1.1078256370001327,
+        "check": 0.21821086999989348
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-05",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Amit",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 40.0,
+          "currency": "USD"
+        },
+        "due_date": {
+          "spoken": "next Friday",
+          "resolved": "2026-10-30"
+        },
+        "note": "game"
+      },
+      "warnings": [],
+      "latency_s": 1.9127554710003096,
+      "stage_s": {
+        "classify": 0.22060127799977636,
+        "extract": 0.40867151400016155,
+        "refine": 1.0684432749994812,
+        "check": 0.21499589900031424
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-06",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Simran",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 1000000000.0,
+          "currency": "INR"
+        }
+      },
+      "warnings": [
+        "₹1,00,00,00,000 is unusually large for a note."
+      ],
+      "latency_s": 2.0425188399995022,
+      "stage_s": {
+        "classify": 0.21210855600020295,
+        "extract": 0.4150363520002429,
+        "refine": 1.415100012000039,
+        "check": 0.0002307879994987161
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-07",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Jay",
+        "commitment": "return 750 rupees",
+        "due_date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.6551782129999992,
+      "stage_s": {
+        "classify": 0.24230331699982344,
+        "extract": 0.33172957399983716,
+        "refine": 0.8783844120007416,
+        "check": 0.20269532999918738
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-08",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Nisha",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 300.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        },
+        "note": "for the cake"
+      },
+      "warnings": [],
+      "latency_s": 1.9939778130001287,
+      "stage_s": {
+        "classify": 0.21328340899981413,
+        "extract": 0.4479607390003366,
+        "refine": 1.125497815000017,
+        "check": 0.20717986399995425
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-09",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Varun",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 250000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "bike payment"
+      },
+      "warnings": [],
+      "latency_s": 2.0769956180001827,
+      "stage_s": {
+        "classify": 0.2149387419995037,
+        "extract": 0.39173823400051333,
+        "refine": 1.26277986399964,
+        "check": 0.2074592990002202
+      },
+      "error": null
+    },
+    {
+      "case_id": "amt-10",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Lena",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 20.0,
+          "currency": "EUR"
+        },
+        "note": "museum tickets"
+      },
+      "warnings": [],
+      "latency_s": 1.804721664999306,
+      "stage_s": {
+        "classify": 0.19979038499968738,
+        "extract": 0.4226086340004258,
+        "refine": 0.9742703149995577,
+        "check": 0.20797932000004948
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-01",
+      "actual_type": "event",
+      "fields": {
+        "title": "Alarm",
+        "date": {
+          "spoken": "6 am",
+          "resolved": null
+        },
+        "time": "6:00 AM",
+        "people": [
+          "Google"
+        ]
+      },
+      "warnings": [
+        "Couldn't work out a date from “6 am”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.5906953690000591,
+      "stage_s": {
+        "classify": 0.20150917199953255,
+        "extract": 0.31135461299982126,
+        "refine": 1.0775459880005656,
+        "check": 0.0001743379998515593
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-02",
+      "actual_type": "info",
+      "fields": {
+        "topic": "15 percent of 2400",
+        "details": "15 percent of 2400"
+      },
+      "warnings": [],
+      "latency_s": 1.6358036909996372,
+      "stage_s": {
+        "classify": 0.23384474700014835,
+        "extract": 0.32018385299943475,
+        "refine": 0.8785368460003156,
+        "check": 0.20317823099958332
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-03",
+      "actual_type": "general",
+      "fields": {
+        "content": "Turn off the bedroom lights."
+      },
+      "warnings": [],
+      "latency_s": 1.2506438820000767,
+      "stage_s": {
+        "classify": 0.2458282510006029,
+        "extract": 0.20316335299958155,
+        "refine": 0.597328292000384,
+        "check": 0.20424495599945658
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-04",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.2370491880001282,
+      "stage_s": {
+        "classify": 0.23699653900075646
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-05",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.21401371699994343,
+      "stage_s": {
+        "classify": 0.21395189200029563
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-06",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.18595500500032358,
+      "stage_s": {
+        "classify": 0.18585184499988827
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-07",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.2289863329997388,
+      "stage_s": {
+        "classify": 0.22891946700019616
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-08",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.24914908000027935,
+      "stage_s": {
+        "classify": 0.249087457999849
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-09",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.24189309499979572,
+      "stage_s": {
+        "classify": 0.24184009500004322
+      },
+      "error": null
+    },
+    {
+      "case_id": "non-10",
+      "actual_type": "not_a_note",
+      "fields": {},
+      "warnings": [],
+      "latency_s": 0.21418273500057694,
+      "stage_s": {
+        "classify": 0.21412971900008415
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-01",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Ananya",
+        "commitment": "review her resume",
+        "due_date": {
+          "spoken": "this weekend",
+          "resolved": "2026-10-17"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.488709648000622,
+      "stage_s": {
+        "classify": 0.17756704299972625,
+        "extract": 0.34617467599946394,
+        "refine": 0.7623866330004603,
+        "check": 0.20252272400011861
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-02",
+      "actual_type": "event",
+      "fields": {
+        "title": "Book club meeting",
+        "date": {
+          "spoken": "Thursday",
+          "resolved": "2026-10-22"
+        },
+        "time": "7 pm",
+        "people": [
+          "Riya'S Place"
+        ]
+      },
+      "warnings": [],
+      "latency_s": 1.8750640140005999,
+      "stage_s": {
+        "classify": 0.21165780800038192,
+        "extract": 0.4000585149997278,
+        "refine": 1.057992963000288,
+        "check": 0.20529839800019545
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-03",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Gate code",
+        "details": "The gate code for the new apartment is 4471"
+      },
+      "warnings": [],
+      "latency_s": 1.4558676160004325,
+      "stage_s": {
+        "classify": 0.20159515900013503,
+        "extract": 0.2188480279992291,
+        "refine": 0.833143064000069,
+        "check": 0.202220505000696
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-04",
+      "actual_type": "general",
+      "fields": {
+        "content": "Build a small app to track plant watering."
+      },
+      "warnings": [],
+      "latency_s": 1.1314352100007454,
+      "stage_s": {
+        "classify": 0.20291392599938263,
+        "extract": 0.22344646900000953,
+        "refine": 0.5061545860007755,
+        "check": 0.19886886099993717
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-05",
+      "actual_type": "general",
+      "fields": {
+        "content": "Need to pick up the dry cleaning."
+      },
+      "warnings": [],
+      "latency_s": 1.2322384760000205,
+      "stage_s": {
+        "classify": 0.20462253200003033,
+        "extract": 0.20928727299997263,
+        "refine": 0.6207770809996873,
+        "check": 0.19750542499969015
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-06",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Cafe Wi-Fi",
+        "details": "CafeGuest with password brew2026"
+      },
+      "warnings": [],
+      "latency_s": 1.627052294999885,
+      "stage_s": {
+        "classify": 0.20330220600044413,
+        "extract": 0.3146941749992038,
+        "refine": 0.898094150000361,
+        "check": 0.21091029600029287
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-07",
+      "actual_type": "promise",
+      "fields": {
+        "person": null,
+        "commitment": "fix my bike",
+        "due_date": {
+          "spoken": "Wednesday",
+          "resolved": "2026-10-21"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.5551640739995491,
+      "stage_s": {
+        "classify": 0.2148008979993392,
+        "extract": 0.32830182100042293,
+        "refine": 0.8026448179998624,
+        "check": 0.20935451399964222
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-08",
+      "actual_type": "info",
+      "fields": {
+        "topic": "School annual day",
+        "details": "20th of November"
+      },
+      "warnings": [],
+      "latency_s": 1.2961241619996144,
+      "stage_s": {
+        "classify": 0.20060137400014355,
+        "extract": 0.26751848999992944,
+        "refine": 0.6212885779996213,
+        "check": 0.20659952000005433
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-09",
+      "actual_type": "info",
+      "fields": {
+        "topic": "Ira's allergy",
+        "details": "peanuts"
+      },
+      "warnings": [],
+      "latency_s": 1.2514116530001047,
+      "stage_s": {
+        "classify": 0.20556990600016434,
+        "extract": 0.25144333300067956,
+        "refine": 0.6000765049993788,
+        "check": 0.19425358700027573
+      },
+      "error": null
+    },
+    {
+      "case_id": "ord-10",
+      "actual_type": "general",
+      "fields": {
+        "content": "Thinking of learning the guitar this year."
+      },
+      "warnings": [],
+      "latency_s": 1.0710701520001749,
+      "stage_s": {
+        "classify": 0.20513905100051488,
+        "extract": 0.20709344199985935,
+        "refine": 0.45961727099984273,
+        "check": 0.1991599100001622
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-01",
+      "actual_type": "event",
+      "fields": {
+        "title": "My dentist appointment",
+        "date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        },
+        "time": "27 o'clock"
+      },
+      "warnings": [
+        "there are only 24 hours in a day"
+      ],
+      "latency_s": 1.658604605000619,
+      "stage_s": {
+        "classify": 0.21516224199967837,
+        "extract": 0.3932059720000325,
+        "refine": 0.7514379430003828,
+        "check": 0.298718887999712
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-02",
+      "actual_type": "payment",
+      "fields": {
+        "person": "Ritesh",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 50000000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Monday",
+          "resolved": "2026-10-26"
+        },
+        "note": "chai"
+      },
+      "warnings": [
+        "₹5,00,00,000 is unusually large for a note."
+      ],
+      "latency_s": 2.0804193549993215,
+      "stage_s": {
+        "classify": 0.22639386700029718,
+        "extract": 0.4737145049994069,
+        "refine": 1.3799487850001242,
+        "check": 0.0002608989998407196
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-03",
+      "actual_type": "promise",
+      "fields": {
+        "person": "Neel",
+        "commitment": "read all of Wikipedia",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      },
+      "warnings": [],
+      "latency_s": 1.5607380740002554,
+      "stage_s": {
+        "classify": 0.24149018000025535,
+        "extract": 0.3455465670003832,
+        "refine": 0.7654881579992434,
+        "check": 0.20813692800038552
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-04",
+      "actual_type": "event",
+      "fields": {
+        "title": "Wedding reception",
+        "date": {
+          "spoken": "31st of February",
+          "resolved": null
+        }
+      },
+      "warnings": [
+        "Couldn't work out a date from “31st of February”. Pick one or leave it empty."
+      ],
+      "latency_s": 1.2982696069993835,
+      "stage_s": {
+        "classify": 0.21217593300025328,
+        "extract": 0.2666906860004019,
+        "refine": 0.8190954100000454,
+        "check": 0.00024559399935242254
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-05",
+      "actual_type": "event",
+      "fields": {
+        "title": "Board meeting",
+        "date": {
+          "spoken": "in 75 years from now",
+          "resolved": "2101-10-17"
+        }
+      },
+      "warnings": [
+        "Date is about 75 years away (Mon 17 Oct 2101)."
+      ],
+      "latency_s": 1.2248295019999205,
+      "stage_s": {
+        "classify": 0.25041796900040936,
+        "extract": 0.2695203879993642,
+        "refine": 0.7046046539999224,
+        "check": 0.0002215330005128635
+      },
+      "error": null
+    },
+    {
+      "case_id": "odd-06",
+      "actual_type": "event",
+      "fields": {
+        "title": "My train to Chennai",
+        "date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        },
+        "people": [
+          "Chennai"
+        ]
+      },
+      "warnings": [
+        "You mentioned catching a train that left last week, but trains typically run on a regular schedule and it's unlikely that you would be able to catch a train that left a week ago."
+      ],
+      "latency_s": 2.092193194999709,
+      "stage_s": {
+        "classify": 0.24574335500074085,
+        "extract": 0.3392279169993344,
+        "refine": 0.8821718240005794,
+        "check": 0.6250081039997895
+      },
+      "error": null
+    }
+  ],
+  "dataset_sha": "f00f4ffe0410"
+}

@@ -1,0 +1,5 @@
+# Everything here is already in backend/requirements.txt; run the benchmark with the backend's
+# virtualenv. Listed so the benchmark's needs are explicit.
+ollama>=0.3.0
+pyyaml>=6.0.1
+pytest>=8.0.0

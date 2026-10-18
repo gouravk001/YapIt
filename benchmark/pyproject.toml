@@ -1,0 +1,18 @@
+# Standalone benchmark for YapIt's LLM pipeline. It imports the backend read-only.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "../backend"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["harness", "app"]

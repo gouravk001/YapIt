@@ -1,0 +1,1441 @@
+{
+  "metadata": {
+    "description": "Held-out test set for comparing LLMs on YapIt's text pipeline. Hand-written and synthetic (not real user data). NEVER use these cases for training or prompt tuning.",
+    "held_out": true,
+    "anchor": {
+      "captured_at": "2026-10-17T10:00:00+05:30",
+      "timezone": "Asia/Kolkata"
+    },
+    "categories": [
+      "amounts",
+      "dates",
+      "direction",
+      "event",
+      "general",
+      "info",
+      "non_note",
+      "ordinary",
+      "payment",
+      "promise",
+      "unreasonable"
+    ]
+  },
+  "cases": [
+    {
+      "id": "eval-01",
+      "category": "payment",
+      "transcript": "Ravi owes me 500 rupees, he said he'll pay by next Friday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Ravi",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "next Friday",
+          "resolved": "2026-10-30"
+        }
+      }
+    },
+    {
+      "id": "eval-02",
+      "category": "payment",
+      "transcript": "I need to pay Rahul 2500 rupees for the dinner we had yesterday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Rahul",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "eval-03",
+      "category": "payment",
+      "transcript": "Aman owes me 1.5 lakh for the laptop he purchased from me.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Aman",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 150000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "eval-04",
+      "category": "payment",
+      "transcript": "Gave 5k cash to Priya for office supplies.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Priya",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 5000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "eval-05",
+      "category": "payment",
+      "transcript": "I owe Suresh 50 dollars for the cloud hosting subscription.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Suresh",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 50.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "eval-06",
+      "category": "payment",
+      "transcript": "Vikram borrowed 2000 rupees and promised to return by end of the month.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Vikram",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 2000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        }
+      }
+    },
+    {
+      "id": "eval-07",
+      "category": "payment",
+      "transcript": "Pay Deepak 10k for rent by tomorrow.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Deepak",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 10000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "eval-08",
+      "category": "payment",
+      "transcript": "Ananya has to return 3500 rupees by the 25th.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Ananya",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 3500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 25th",
+          "resolved": "2026-10-25"
+        }
+      }
+    },
+    {
+      "id": "eval-09",
+      "category": "promise",
+      "transcript": "I promised boss I will send the quarterly review report by Monday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Boss",
+        "commitment": "send the quarterly review report",
+        "due_date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        }
+      }
+    },
+    {
+      "id": "eval-10",
+      "category": "promise",
+      "transcript": "Told Neha I would help her prepare for her interview on Sunday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Neha",
+        "commitment": "help her prepare for her interview",
+        "due_date": {
+          "spoken": "Sunday",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "eval-11",
+      "category": "promise",
+      "transcript": "I committed to delivering the mobile app wireframes to client in 3 days.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Client",
+        "commitment": "delivering the mobile app wireframes",
+        "due_date": {
+          "spoken": "in 3 days",
+          "resolved": "2026-10-20"
+        }
+      }
+    },
+    {
+      "id": "eval-12",
+      "category": "promise",
+      "transcript": "Promised mom I will call doctor for her appointment tomorrow.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Mom",
+        "commitment": "call doctor for her appointment",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "eval-13",
+      "category": "promise",
+      "transcript": "Rohan promised he will finish the backend migration by next Tuesday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Rohan",
+        "commitment": "finish the backend migration",
+        "due_date": {
+          "spoken": "next Tuesday",
+          "resolved": "2026-10-27"
+        }
+      }
+    },
+    {
+      "id": "eval-14",
+      "category": "promise",
+      "transcript": "I told Karan I'd review his pull request by tonight.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Karan",
+        "commitment": "review his pull request",
+        "due_date": {
+          "spoken": "tonight",
+          "resolved": "2026-10-17"
+        }
+      }
+    },
+    {
+      "id": "eval-15",
+      "category": "event",
+      "transcript": "Product demo meeting with stakeholders tomorrow at 4 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Product demo meeting with stakeholders",
+        "date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        },
+        "time": "4 PM"
+      }
+    },
+    {
+      "id": "eval-16",
+      "category": "event",
+      "transcript": "Doctor appointment on the 25th at 11 AM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Doctor appointment",
+        "date": {
+          "spoken": "the 25th",
+          "resolved": "2026-10-25"
+        },
+        "time": "11 AM"
+      }
+    },
+    {
+      "id": "eval-17",
+      "category": "event",
+      "transcript": "Dinner party with Arjun and Meera on next Saturday at 8 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Dinner party",
+        "date": {
+          "spoken": "next Saturday",
+          "resolved": "2026-10-24"
+        },
+        "time": "8 PM",
+        "people": [
+          "Arjun",
+          "Meera"
+        ]
+      }
+    },
+    {
+      "id": "eval-18",
+      "category": "event",
+      "transcript": "Sprint planning session on Monday morning with tech team.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Sprint planning session",
+        "date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        },
+        "time": "morning"
+      }
+    },
+    {
+      "id": "eval-19",
+      "category": "event",
+      "transcript": "Annual general meeting on the 30th at 10 AM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Annual general meeting",
+        "date": {
+          "spoken": "the 30th",
+          "resolved": "2026-10-30"
+        },
+        "time": "10 AM"
+      }
+    },
+    {
+      "id": "eval-20",
+      "category": "event",
+      "transcript": "Birthday celebration for Rohit day after tomorrow.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Birthday celebration for Rohit",
+        "date": {
+          "spoken": "day after tomorrow",
+          "resolved": "2026-10-19"
+        },
+        "people": [
+          "Rohit"
+        ]
+      }
+    },
+    {
+      "id": "eval-21",
+      "category": "info",
+      "transcript": "Note to self the office Wi-Fi password is YapItSecure2026.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Office Wi-Fi password",
+        "details": "YapItSecure2026"
+      }
+    },
+    {
+      "id": "eval-22",
+      "category": "info",
+      "transcript": "Remember passport expires in December 2028.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Passport expiry",
+        "details": "December 2028"
+      }
+    },
+    {
+      "id": "eval-23",
+      "category": "info",
+      "transcript": "The spare key to garage is hidden under the flowerpot beside the door.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Spare garage key location",
+        "details": "under the flowerpot beside the door"
+      }
+    },
+    {
+      "id": "eval-24",
+      "category": "info",
+      "transcript": "Dr Verma's clinic phone number is 9876543210.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Dr Verma clinic phone number",
+        "details": "9876543210"
+      }
+    },
+    {
+      "id": "eval-25",
+      "category": "info",
+      "transcript": "The server SSH port was changed to 2222 last week.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Server SSH port",
+        "details": "2222"
+      }
+    },
+    {
+      "id": "eval-26",
+      "category": "info",
+      "transcript": "Grocery discount code for online order is SAVE50.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Grocery discount code",
+        "details": "SAVE50"
+      }
+    },
+    {
+      "id": "eval-27",
+      "category": "general",
+      "transcript": "Just feeling a bit tired today and thinking about taking a walk later.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Feeling tired today and thinking about taking a walk later."
+      }
+    },
+    {
+      "id": "eval-28",
+      "category": "general",
+      "transcript": "Random thought what if we rewrote the parser in Rust eventually.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Random thought about rewriting the parser in Rust eventually."
+      }
+    },
+    {
+      "id": "eval-29",
+      "category": "general",
+      "transcript": "Birds singing outside the window on a sunny afternoon.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Birds singing outside the window on a sunny afternoon."
+      }
+    },
+    {
+      "id": "eval-30",
+      "category": "general",
+      "transcript": "Check the tires pressure sometime soon, also buy bread.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Check tire pressure and buy bread."
+      }
+    },
+    {
+      "id": "eval-31",
+      "category": "general",
+      "transcript": "Maybe start reading that sci-fi novel tonight if I finish chores.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Maybe start reading sci-fi novel tonight if chores are finished."
+      }
+    },
+    {
+      "id": "eval-32",
+      "category": "payment",
+      "transcript": "Lent 50000 rupees to cousin for his college admission due in 2 weeks.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Cousin",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 50000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "in 2 weeks",
+          "resolved": "2026-10-31"
+        }
+      }
+    },
+    {
+      "id": "eval-33",
+      "category": "promise",
+      "transcript": "Promised dad I will book train tickets by tomorrow evening.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Dad",
+        "commitment": "book train tickets",
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "eval-34",
+      "category": "event",
+      "transcript": "Dentist follow up consultation on the 28th at 3 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Dentist follow up consultation",
+        "date": {
+          "spoken": "the 28th",
+          "resolved": "2026-10-28"
+        },
+        "time": "3 PM"
+      }
+    },
+    {
+      "id": "eval-35",
+      "category": "info",
+      "transcript": "The lock combination for the bicycle chain is 4821.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Bicycle lock combination",
+        "details": "4821"
+      }
+    },
+    {
+      "id": "eval-36",
+      "category": "payment",
+      "transcript": "Need to pay 1200 rupees electricity bill by end of the month.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 1200.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        }
+      }
+    },
+    {
+      "id": "eval-37",
+      "category": "event",
+      "transcript": "Design review workshop with Sunita and Tarun next Wednesday at 2 PM.",
+      "expected_type": "event",
+      "expected_fields": {
+        "title": "Design review workshop",
+        "date": {
+          "spoken": "next Wednesday",
+          "resolved": "2026-10-28"
+        },
+        "time": "2 PM",
+        "people": [
+          "Sunita",
+          "Tarun"
+        ]
+      }
+    },
+    {
+      "id": "eval-38",
+      "category": "promise",
+      "transcript": "I promised myself to meditate 15 minutes every morning.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Myself",
+        "commitment": "meditate 15 minutes every morning"
+      }
+    },
+    {
+      "id": "eval-39",
+      "category": "info",
+      "transcript": "Car service booking number is MH02-9988.",
+      "expected_type": "info",
+      "expected_fields": {
+        "topic": "Car service booking number",
+        "details": "MH02-9988"
+      }
+    },
+    {
+      "id": "eval-40",
+      "category": "general",
+      "transcript": "Thinking about whether we should switch our team lunches to Thursdays.",
+      "expected_type": "general",
+      "expected_fields": {
+        "content": "Thinking about switching team lunches to Thursdays."
+      }
+    },
+    {
+      "id": "eval-41",
+      "category": "non_note",
+      "transcript": "Thanks for watching, don't forget to like and subscribe.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-42",
+      "category": "non_note",
+      "transcript": "Hello, hello, testing one two three, is this thing on?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-43",
+      "category": "non_note",
+      "transcript": "Hey, what's the weather going to be like today?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-44",
+      "category": "non_note",
+      "transcript": "Play some relaxing music.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-45",
+      "category": "non_note",
+      "transcript": "Uh, okay, hmm, never mind.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-46",
+      "category": "non_note",
+      "transcript": "Twinkle twinkle little star, how I wonder what you are.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "eval-47",
+      "category": "unreasonable",
+      "transcript": "I have to go to my cousin's wedding after 40 years.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "eval-48",
+      "category": "unreasonable",
+      "transcript": "Rahul owes me 900 crore rupees for the samosas.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Rahul",
+        "direction": "they_owe_me"
+      },
+      "expect_warning": true
+    },
+    {
+      "id": "eval-49",
+      "category": "unreasonable",
+      "transcript": "Team meeting tomorrow at 25 PM in the big conference room.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "eval-50",
+      "category": "unreasonable",
+      "transcript": "I promised Arjun I'd run a full marathon in 10 minutes tomorrow.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Arjun"
+      },
+      "expect_warning": true
+    },
+    {
+      "id": "eval-51",
+      "category": "unreasonable",
+      "transcript": "Birthday party for Meera on the 30th of February.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "eval-52",
+      "category": "unreasonable",
+      "transcript": "My flight to Mumbai leaves yesterday at 6 pm.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "dir-01",
+      "category": "direction",
+      "transcript": "I lent Kabir 2000 rupees, he'll return it on Monday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Kabir",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 2000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        }
+      }
+    },
+    {
+      "id": "dir-02",
+      "category": "direction",
+      "transcript": "Neha lent me 300 for lunch.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Neha",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 300.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-03",
+      "category": "direction",
+      "transcript": "I borrowed 1500 from Arjun for the cab.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Arjun",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 1500.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-04",
+      "category": "direction",
+      "transcript": "Sameer borrowed 800 from me last week.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Sameer",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 800.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-05",
+      "category": "direction",
+      "transcript": "I have to return 2500 rupees to Meena by Friday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Meena",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        }
+      }
+    },
+    {
+      "id": "dir-06",
+      "category": "direction",
+      "transcript": "Rohan still hasn't paid me back the 1200 for the concert.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Rohan",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 1200.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-07",
+      "category": "direction",
+      "transcript": "I need to give Suresh 450 rupees for the vegetables.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Suresh",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 450.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-08",
+      "category": "direction",
+      "transcript": "Anjali will pay me 3000 for the tickets tomorrow.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Anjali",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 3000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "tomorrow",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "dir-09",
+      "category": "direction",
+      "transcript": "Pay Lakshmi 4000 rupees for this month's salary by the 5th.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Lakshmi",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 4000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 5th",
+          "resolved": "2026-11-05"
+        }
+      }
+    },
+    {
+      "id": "dir-10",
+      "category": "direction",
+      "transcript": "Vivek owes me 650 for the pizza.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Vivek",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 650.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-11",
+      "category": "direction",
+      "transcript": "I owe my landlord 18000 rupees for this month's rent.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 18000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-12",
+      "category": "direction",
+      "transcript": "Karan paid for my movie ticket, I owe him 350.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Karan",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 350.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-13",
+      "category": "direction",
+      "transcript": "I covered Isha's share of the dinner, 900 rupees, she will send it on Sunday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Isha",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 900.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Sunday",
+          "resolved": "2026-10-18"
+        }
+      }
+    },
+    {
+      "id": "dir-14",
+      "category": "direction",
+      "transcript": "Return the 5k I took from Dad.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 5000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-15",
+      "category": "direction",
+      "transcript": "Manoj has to give me 2 lakh for the car he bought from me.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Manoj",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 200000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-16",
+      "category": "direction",
+      "transcript": "Gave Farhan 1000 as a loan, due end of the month.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Farhan",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 1000.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "end of the month",
+          "resolved": "2026-10-31"
+        }
+      }
+    },
+    {
+      "id": "dir-17",
+      "category": "direction",
+      "transcript": "Took 600 from Pooja for the auto fare, need to pay her back.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Pooja",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 600.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-18",
+      "category": "direction",
+      "transcript": "Deepak transferred me 2000 by mistake, I have to send it back.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Deepak",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "dir-19",
+      "category": "direction",
+      "transcript": "My brother owes me 12000 for the phone.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 12000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "date-01",
+      "category": "dates",
+      "transcript": "Doctor's appointment on 3 March at 10 am.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "3 March",
+          "resolved": "2027-03-03"
+        }
+      }
+    },
+    {
+      "id": "date-02",
+      "category": "dates",
+      "transcript": "Mom's birthday dinner on the 25th of December.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "the 25th of December",
+          "resolved": "2026-12-25"
+        }
+      }
+    },
+    {
+      "id": "date-03",
+      "category": "dates",
+      "transcript": "I promised my accountant I'd submit the tax documents in 3 months.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "due_date": {
+          "spoken": "in 3 months",
+          "resolved": "2027-01-17"
+        }
+      }
+    },
+    {
+      "id": "date-04",
+      "category": "dates",
+      "transcript": "Team offsite next weekend in Lonavala.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "next weekend",
+          "resolved": "2026-10-24"
+        }
+      }
+    },
+    {
+      "id": "date-05",
+      "category": "dates",
+      "transcript": "Parent teacher meeting on Monday at 9.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "Monday",
+          "resolved": "2026-10-19"
+        }
+      }
+    },
+    {
+      "id": "date-06",
+      "category": "dates",
+      "transcript": "Call with the Singapore client in two weeks.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "in two weeks",
+          "resolved": "2026-10-31"
+        }
+      }
+    },
+    {
+      "id": "date-07",
+      "category": "dates",
+      "transcript": "Electricity bill due on the 5th, I have to pay BESCOM 2300 rupees.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 2300.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "the 5th",
+          "resolved": "2026-11-05"
+        }
+      }
+    },
+    {
+      "id": "date-08",
+      "category": "dates",
+      "transcript": "Dinner with Kavya tonight at 8.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "tonight",
+          "resolved": "2026-10-17"
+        }
+      }
+    },
+    {
+      "id": "date-09",
+      "category": "dates",
+      "transcript": "Concert on 1st November with Ritu and Sam.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "1st November",
+          "resolved": "2026-11-01"
+        }
+      }
+    },
+    {
+      "id": "date-10",
+      "category": "dates",
+      "transcript": "I told Ishaan I'd send the design files the day after tomorrow.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Ishaan",
+        "due_date": {
+          "spoken": "the day after tomorrow",
+          "resolved": "2026-10-19"
+        }
+      }
+    },
+    {
+      "id": "date-11",
+      "category": "dates",
+      "transcript": "Flight to Delhi in 5 days, need to pack.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "in 5 days",
+          "resolved": "2026-10-22"
+        }
+      }
+    },
+    {
+      "id": "date-12",
+      "category": "dates",
+      "transcript": "Gym membership renewal meeting on Friday at 6 pm.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        }
+      }
+    },
+    {
+      "id": "amt-01",
+      "category": "amounts",
+      "transcript": "Sunil owes me two and a half thousand for the groceries.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Sunil",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 2500.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-02",
+      "category": "amounts",
+      "transcript": "I owe Priyanka 1.25 lakh for the laptop.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Priyanka",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 125000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-03",
+      "category": "amounts",
+      "transcript": "Raj owes me 15k.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Raj",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 15000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-04",
+      "category": "amounts",
+      "transcript": "The builder owes me a refund of 50,000 rupees.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 50000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-05",
+      "category": "amounts",
+      "transcript": "I have to pay Amit 40 dollars for the game.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Amit",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 40.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "amt-06",
+      "category": "amounts",
+      "transcript": "Simran owes me 1 crore for the shop.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Simran",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 10000000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-07",
+      "category": "amounts",
+      "transcript": "I lent 750 rupees to Jay, he'll return it Friday.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Jay",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 750.0,
+          "currency": "INR"
+        },
+        "due_date": {
+          "spoken": "Friday",
+          "resolved": "2026-10-23"
+        }
+      }
+    },
+    {
+      "id": "amt-08",
+      "category": "amounts",
+      "transcript": "I owe Nisha three hundred rupees for the cake.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Nisha",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 300.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-09",
+      "category": "amounts",
+      "transcript": "Varun owes me 2,50,000 for the bike.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Varun",
+        "direction": "they_owe_me",
+        "amount": {
+          "amount": 250000.0,
+          "currency": "INR"
+        }
+      }
+    },
+    {
+      "id": "amt-10",
+      "category": "amounts",
+      "transcript": "I need to pay 20 euros to Lena for the museum tickets.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "person": "Lena",
+        "direction": "i_owe_them",
+        "amount": {
+          "amount": 20.0,
+          "currency": "EUR"
+        }
+      }
+    },
+    {
+      "id": "non-01",
+      "category": "non_note",
+      "transcript": "Okay Google, set an alarm for 6 am.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-02",
+      "category": "non_note",
+      "transcript": "What's 15 percent of 2400?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-03",
+      "category": "non_note",
+      "transcript": "Turn off the bedroom lights.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-04",
+      "category": "non_note",
+      "transcript": "Testing, testing, can you hear me?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-05",
+      "category": "non_note",
+      "transcript": "Hi there, how are you doing today?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-06",
+      "category": "non_note",
+      "transcript": "And now, a word from our sponsors.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-07",
+      "category": "non_note",
+      "transcript": "Don't forget to smash that like button and subscribe.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-08",
+      "category": "non_note",
+      "transcript": "La la la, la la la la.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-09",
+      "category": "non_note",
+      "transcript": "Hey Siri, what's the capital of Australia?",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "non-10",
+      "category": "non_note",
+      "transcript": "Mic check one two, one two.",
+      "expected_type": "not_a_note",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-01",
+      "category": "ordinary",
+      "transcript": "I promised Ananya I'd review her resume this weekend.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Ananya",
+        "due_date": {
+          "spoken": "this weekend",
+          "resolved": "2026-10-17"
+        }
+      }
+    },
+    {
+      "id": "ord-02",
+      "category": "ordinary",
+      "transcript": "Book club meeting at Riya's place on Thursday at 7 pm.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "Thursday",
+          "resolved": "2026-10-22"
+        }
+      }
+    },
+    {
+      "id": "ord-03",
+      "category": "ordinary",
+      "transcript": "The gate code for the new apartment is 4471.",
+      "expected_type": "info",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-04",
+      "category": "ordinary",
+      "transcript": "Idea: build a small app to track plant watering.",
+      "expected_type": "general",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-05",
+      "category": "ordinary",
+      "transcript": "Need to pick up the dry cleaning.",
+      "expected_type": "general",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-06",
+      "category": "ordinary",
+      "transcript": "The Wi-Fi at the cafe near the office is CafeGuest with password brew2026.",
+      "expected_type": "info",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-07",
+      "category": "ordinary",
+      "transcript": "Sanjay said he will fix my bike by Wednesday.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Sanjay",
+        "due_date": {
+          "spoken": "Wednesday",
+          "resolved": "2026-10-21"
+        }
+      }
+    },
+    {
+      "id": "ord-08",
+      "category": "ordinary",
+      "transcript": "School annual day on the 20th of November.",
+      "expected_type": "event",
+      "expected_fields": {
+        "date": {
+          "spoken": "the 20th of November",
+          "resolved": "2026-11-20"
+        }
+      }
+    },
+    {
+      "id": "ord-09",
+      "category": "ordinary",
+      "transcript": "Remember that Ira is allergic to peanuts.",
+      "expected_type": "info",
+      "expected_fields": {}
+    },
+    {
+      "id": "ord-10",
+      "category": "ordinary",
+      "transcript": "Thinking of learning the guitar this year.",
+      "expected_type": "general",
+      "expected_fields": {}
+    },
+    {
+      "id": "odd-01",
+      "category": "unreasonable",
+      "transcript": "My dentist appointment is at 27 o'clock tomorrow.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "odd-02",
+      "category": "unreasonable",
+      "transcript": "Ritesh owes me 50 crore rupees for chai.",
+      "expected_type": "payment",
+      "expected_fields": {
+        "direction": "they_owe_me"
+      },
+      "expect_warning": true
+    },
+    {
+      "id": "odd-03",
+      "category": "unreasonable",
+      "transcript": "I promised Neel I'd read all of Wikipedia by tomorrow.",
+      "expected_type": "promise",
+      "expected_fields": {
+        "person": "Neel"
+      },
+      "expect_warning": true
+    },
+    {
+      "id": "odd-04",
+      "category": "unreasonable",
+      "transcript": "Wedding reception on the 31st of February.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "odd-05",
+      "category": "unreasonable",
+      "transcript": "Board meeting in 75 years from now.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    },
+    {
+      "id": "odd-06",
+      "category": "unreasonable",
+      "transcript": "My train to Chennai left last week, I need to catch it tomorrow.",
+      "expected_type": "event",
+      "expected_fields": {},
+      "expect_warning": true
+    }
+  ]
+}

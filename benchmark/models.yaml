@@ -1,0 +1,33 @@
+# Models to benchmark. Separate from the app's registry: adding a model here never changes what
+# the app runs.
+#
+# To test a new model, add one line and run `backend/.venv/bin/python benchmark/run.py`:
+#     my-model: phi4-mini            # id: Ollama tag
+# It is downloaded if needed, tested on the full test set and added to results/comparison.md.
+# Thinking models (Qwen 3.5, Gemma 4, ...) get thinking switched off automatically.
+#
+# Longer form, all keys optional except tag:
+#     my-model:
+#       tag: phi4-mini
+#       label: Phi-4 Mini            # column name in the report (default: the tag)
+#       think: true                  # force thinking on/off
+#       options: {num_predict: 2048} # override the defaults below for this model
+
+# Generation settings shared by every model. They match the app's active Gemma entry in
+# backend/config/models.yaml, so the comparison reflects how the app would behave.
+defaults:
+  temperature: 0.1
+  top_p: 0.9
+  num_ctx: 4096
+  num_predict: 400
+
+models:
+  gemma3-4b:
+    tag: gemma3:4b
+    label: Gemma 3 4B (app default)
+  qwen3.5-4b:
+    tag: qwen3.5:4b
+    label: Qwen 3.5 4B
+  llama3.2-3b:
+    tag: llama3.2:3b
+    label: Llama 3.2 3B
