@@ -8,6 +8,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config.loader import load_types
 from app.pipeline.prompt_builder import classification_prompt, extraction_prompt
+from app.pipeline.schema_builder import NOTE_KIND
+
+
+def sample_kind(sample: dict) -> str:
+    """Non-note samples name their kind in "expected_kind"; everything else is a note."""
+    return sample.get("expected_kind", NOTE_KIND)
 
 
 def export_dataset(dataset_path: Path, output_path: Path) -> None:
@@ -29,7 +35,10 @@ def export_dataset(dataset_path: Path, output_path: Path) -> None:
 
             # 1. Classification training example
             cls_prompt = classification_prompt(transcript, types)
-            cls_completion = json.dumps({"type_name": expected_type, "confidence": 1.0})
+            kind = sample_kind(s)
+            cls_completion = json.dumps(
+                {"kind": kind, "type_name": "general" if kind != NOTE_KIND else expected_type}
+            )
             cls_example = {
                 "task": "classification",
                 "sample_id": s["id"],

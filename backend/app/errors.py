@@ -7,9 +7,10 @@ class AppError(Exception):
     status_code = 500
     code = "InternalServerError"
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, **extra: str) -> None:
         super().__init__(message)
         self.message = message
+        self.extra = extra
 
 
 class NotFoundError(AppError):
@@ -25,6 +26,20 @@ class UnknownTypeError(AppError):
 class TranscriptionError(AppError):
     status_code = 422
     code = "TranscriptionFailed"
+
+
+class UnclearAudioError(AppError):
+    """The recording decoded fine but the speech could not be made out reliably."""
+
+    status_code = 422
+    code = "UnclearAudio"
+
+
+class NotANoteError(AppError):
+    """The input was understood but is not something worth keeping as a note."""
+
+    status_code = 422
+    code = "NotANote"
 
 
 class ModelUnavailableError(AppError):

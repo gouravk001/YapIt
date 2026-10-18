@@ -8,19 +8,29 @@ function getAudioExtension(mimeType) {
   return ".wav";
 }
 
+export class ApiError extends Error {
+  constructor(message, { code = null, transcript = null } = {}) {
+    super(message);
+    this.code = code;
+    this.transcript = transcript;
+  }
+}
+
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
-  const response = await fetch(url, options);
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    throw new ApiError("Can't reach the YapIt backend. Is it running?", { code: "Offline" });
+  }
 
   if (!response.ok) {
-    let errorDetail = "Request failed";
-    try {
-      const errorJson = await response.json();
-      errorDetail = errorJson.detail || errorJson.error || JSON.stringify(errorJson);
-    } catch {
-      errorDetail = `${response.status} ${response.statusText}`;
-    }
-    throw new Error(errorDetail);
+    const body = await response.json().catch(() => null);
+    throw new ApiError(body?.detail || `${response.status} ${response.statusText}`, {
+      code: body?.error,
+      transcript: body?.transcript,
+    });
   }
 
   if (response.status === 204) {

@@ -20,14 +20,14 @@ _HTTP_ERROR_CODES = {
 }
 
 
-def error_response(status_code: int, code: str, detail: str) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content={"error": code, "detail": detail})
+def error_response(status_code: int, code: str, detail: str, **extra: str) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"error": code, "detail": detail, **extra})
 
 
 async def _handle_app_error(request: Request, exc: AppError) -> JSONResponse:
     if exc.status_code >= 500:
         logger.error("%s on %s: %s", exc.code, request.url.path, exc.message)
-    return error_response(exc.status_code, exc.code, exc.message)
+    return error_response(exc.status_code, exc.code, exc.message, **exc.extra)
 
 
 async def _handle_http_error(request: Request, exc: HTTPException) -> JSONResponse:

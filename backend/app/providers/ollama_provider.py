@@ -24,6 +24,8 @@ class OllamaProvider(LLM):
             self._options["top_p"] = entry.top_p
         if entry.num_ctx is not None:
             self._options["num_ctx"] = entry.num_ctx
+        if entry.num_predict is not None:
+            self._options["num_predict"] = entry.num_predict
 
     def generate(self, prompt: str, json_schema: dict | None = None) -> str | dict:
         kwargs: dict = {

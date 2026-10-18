@@ -15,3 +15,8 @@ def test_resolve_people_list():
     res = resolve_person(raw_list)
     assert res == ["Ravi", "Priya Sharma", "Amit"]
 
+
+def test_speaker_is_never_a_person():
+    assert resolve_person("I") is None
+    assert resolve_person(" me ") is None
+    assert resolve_person(["Rohit", "I", "myself"]) == ["Rohit"]

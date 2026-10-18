@@ -11,12 +11,15 @@ from typing import Any
 # Add backend directory to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.config.loader import load_model_registry, load_types
+from app.config.loader import load_checks, load_model_registry, load_types
+from app.errors import NotANoteError
 from app.providers.factory import create_providers
 from app.services.pipeline_service import PipelineService
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("eval")
+
+NOT_A_NOTE = "not_a_note"
 
 
 def get_vram_used_mb() -> int | None:
@@ -41,7 +44,7 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
     active_llm = registry.get_active("llm")
     types = load_types()
     transcriber, llm = create_providers(registry)
-    pipeline = PipelineService(transcriber, llm, types)
+    pipeline = PipelineService(transcriber, llm, types, plausibility_rules=load_checks())
 
     dataset_path = Path(__file__).parent / "dataset.json"
     with dataset_path.open("r", encoding="utf-8") as f:
@@ -58,6 +61,11 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
     needs_review_count = 0
     total_fields_checked = 0
     total_fields_matched = 0
+    per_field_stats: dict[str, dict[str, int]] = {}
+    errored: list[str] = []
+    warnings_expected = warnings_caught = 0
+    ordinary_notes = false_warnings = 0
+    mismatches: list[dict[str, Any]] = []
 
     durations: list[float] = []
 
@@ -71,6 +79,7 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
     async def _evaluate_all():
         nonlocal correct_classifications, needs_review_count
         nonlocal total_fields_checked, total_fields_matched
+        nonlocal warnings_expected, warnings_caught, ordinary_notes, false_warnings
 
         for idx, sample in enumerate(samples, 1):
             exp_type = sample["expected_type"]
@@ -79,36 +88,62 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
             per_type_stats[exp_type]["total"] += 1
 
             t0 = time.perf_counter()
+            envelope = None
             try:
                 envelope = await pipeline.process_text(
                     sample["transcript"], captured_at=captured_at, timezone=timezone
                 )
+                actual_type = envelope.type_name
+            except NotANoteError:
+                actual_type = NOT_A_NOTE
             except Exception as e:
                 logger.error("Error processing sample %s: %s", sample["id"], e)
+                errored.append(sample["id"])
                 continue
             elapsed = time.perf_counter() - t0
             durations.append(elapsed)
 
-            # Check classification
-            is_class_correct = envelope.type_name == exp_type
+            is_class_correct = actual_type == exp_type
             if is_class_correct:
                 correct_classifications += 1
                 per_type_stats[exp_type]["correct"] += 1
 
-            if envelope.status == "needs_review":
+            if envelope is not None and envelope.missing_fields:
                 needs_review_count += 1
 
-            # Check field match
-            exp_fields = sample.get("expected_fields", {})
-            for k, expected_v in exp_fields.items():
+            warned = envelope is not None and bool(envelope.warnings)
+            if sample.get("expect_warning"):
+                warnings_expected += 1
+                warnings_caught += warned
+            elif envelope is not None:
+                ordinary_notes += 1
+                false_warnings += warned
+
+            fields = envelope.fields if envelope is not None else {}
+            for k, expected_v in sample.get("expected_fields", {}).items():
+                stats = per_field_stats.setdefault(f"{exp_type}.{k}", {"checked": 0, "matched": 0})
                 total_fields_checked += 1
-                actual_v = envelope.fields.get(k)
-                if _field_matches(expected_v, actual_v):
+                stats["checked"] += 1
+                if _field_matches(expected_v, fields.get(k)):
                     total_fields_matched += 1
+                    stats["matched"] += 1
+                else:
+                    mismatches.append(
+                        {
+                            "id": sample["id"],
+                            "field": k,
+                            "expected": expected_v,
+                            "actual": fields.get(k),
+                        }
+                    )
 
             status_char = "✓" if is_class_correct else "✗"
+            summary = f"  {envelope.summary}" if envelope is not None else ""
+            if warned:
+                summary += f"  ⚠ {envelope.warnings[0].message}"
             print(
-                f"[{idx:02d}/{total:02d}] {status_char} Expected: {exp_type:<8} Actual: {envelope.type_name:<8} ({elapsed:.2f}s)"
+                f"[{idx:02d}/{total:02d}] {status_char} Expected: {exp_type:<10} "
+                f"Actual: {actual_type:<10} ({elapsed:.2f}s){summary}"
             )
 
     asyncio.run(_evaluate_all())
@@ -133,6 +168,18 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
             for t, stats in per_type_stats.items()
             if stats["total"] > 0
         },
+        "per_field_accuracy": {
+            f: round((stats["matched"] / stats["checked"]) * 100, 2)
+            for f, stats in sorted(per_field_stats.items())
+        },
+        "warning_recall": (
+            round(warnings_caught / warnings_expected * 100, 2) if warnings_expected else None
+        ),
+        "false_warning_rate": (
+            round(false_warnings / ordinary_notes * 100, 2) if ordinary_notes else None
+        ),
+        "errored_samples": errored,
+        "field_mismatches": mismatches,
     }
 
     # Save run
@@ -140,7 +187,7 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"{active_llm.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with out_file.open("w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
+        json.dump(results, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 65)
     print("EVALUATION RESULTS")
@@ -150,11 +197,20 @@ def run_eval(llm_override: str | None = None) -> dict[str, Any]:
     print(f"Field Accuracy:          {results['field_accuracy']}%")
     print(f"Needs Review Fraction:   {results['needs_review_fraction'] * 100:.1f}%")
     print(f"Avg Latency per note:    {results['average_latency_sec']}s")
+    print(
+        f"Warnings:                caught {warnings_caught}/{warnings_expected} unreasonable, "
+        f"false alarms on {false_warnings}/{ordinary_notes} ordinary notes"
+    )
     print(f"VRAM used:               {results['vram_used_mb'] or 'N/A'} MB")
     print("-" * 65)
     print("Per-type accuracy:")
     for t, acc in results["per_type_accuracy"].items():
         print(f"  {t:<10}: {acc}%")
+    print("Per-field accuracy:")
+    for f, acc in results["per_field_accuracy"].items():
+        print(f"  {f:<22}: {acc}%")
+    if errored:
+        print(f"ERRORED SAMPLES (counted as wrong): {', '.join(errored)}")
     print(f"Saved to: {out_file}")
 
     return results

@@ -92,11 +92,11 @@ async def get_notes(
         params.append(f"%{person.lower()}%")
 
     if date_from:
-        where_clauses.append("n.created_at >= ?")
+        where_clauses.append("julianday(n.created_at) >= julianday(?)")
         params.append(date_from)
 
     if date_to:
-        where_clauses.append("n.created_at <= ?")
+        where_clauses.append("julianday(n.created_at) <= julianday(?)")
         params.append(date_to)
 
     if status:
@@ -104,7 +104,8 @@ async def get_notes(
         params.append(status)
 
     where_sql = f" WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
-    order_sql = " ORDER BY n.created_at DESC LIMIT ? OFFSET ?;"
+    # julianday() compares instants, so timestamps with different UTC offsets order correctly.
+    order_sql = " ORDER BY julianday(n.created_at) DESC LIMIT ? OFFSET ?;"
     params.extend([limit, offset])
 
     full_query = f"{base_query}{where_sql}{order_sql}"

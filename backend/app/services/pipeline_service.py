@@ -3,19 +3,41 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 from uuid import uuid4
 
-from app.api.models import NoteEnvelope
+from app.api.models import NoteEnvelope, NoteWarning
+from app.config.checks_config import PlausibilityRules
+from app.config.models_config import TranscriptQualityRules
 from app.config.types_config import TypeDefinition
-from app.errors import UnknownTypeError
+from app.errors import NotANoteError, UnclearAudioError, UnknownTypeError
 from app.pipeline.classify import classify
 from app.pipeline.extract import extract
+from app.pipeline.plausibility import find_concerns
+from app.pipeline.plausibility_check import check_plausibility
+from app.pipeline.refine import fallback_summary, refine
 from app.pipeline.resolve import resolve
+from app.pipeline.transcript_check import find_transcript_problem
 from app.pipeline.validate import validate
 from app.providers.base import LLM, Transcriber
+from app.resolvers.dates import capture_day
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+_NOT_A_NOTE_MESSAGE = (
+    "That didn't sound like a note. Try saying what you want to remember, "
+    'for example "Ravi owes me 500 rupees".'
+)
+
+
+def _timed(step: str, fn: Callable[[], T]) -> T:
+    started = time.perf_counter()
+    result = fn()
+    logger.info("%s took %.3fs", step, time.perf_counter() - started)
+    return result
 
 
 class PipelineService:
@@ -27,11 +49,15 @@ class PipelineService:
         transcriber: Transcriber,
         llm: LLM,
         types: list[TypeDefinition],
+        quality_rules: TranscriptQualityRules | None = None,
+        plausibility_rules: PlausibilityRules | None = None,
     ) -> None:
         self._transcriber = transcriber
         self._llm = llm
         self._types = types
         self._type_map = {t.name: t for t in types}
+        self._quality_rules = quality_rules
+        self._plausibility_rules = plausibility_rules
 
     async def process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
         return await asyncio.to_thread(self._process_audio, audio_path, captured_at, timezone)
@@ -45,69 +71,37 @@ class PipelineService:
         type_def = self._type_map.get(type_name)
         if not type_def:
             raise UnknownTypeError(f"Unknown note type: {type_name!r}")
-        return await asyncio.to_thread(self._retype, transcript, type_def, captured_at, timezone)
+        return await asyncio.to_thread(self._draft, transcript, type_def, captured_at, timezone)
 
     def _process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        t0 = time.perf_counter()
-        transcript = self._transcriber.transcribe(audio_path)
-        logger.info("Transcribe completed in %.3fs: %r", time.perf_counter() - t0, transcript[:60])
-        return self._process_text(transcript, captured_at, timezone)
+        transcription = _timed("transcribe", lambda: self._transcriber.transcribe(audio_path))
+        if self._quality_rules is not None:
+            problem = find_transcript_problem(transcription, self._quality_rules)
+            if problem:
+                logger.info("Rejected unclear transcript: %s", problem)
+                raise UnclearAudioError(problem, transcript=transcription.text)
+        return self._process_text(transcription.text, captured_at, timezone)
 
     def _process_text(self, transcript: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        # Step 1: Classify
-        t1 = time.perf_counter()
-        type_def = classify(transcript, self._types, self._llm)
-        logger.info("Classified in %.3fs as type=%s", time.perf_counter() - t1, type_def.name)
+        classification = _timed("classify", lambda: classify(transcript, self._types, self._llm))
+        if not classification.is_note:
+            raise NotANoteError(_NOT_A_NOTE_MESSAGE, transcript=transcript)
+        return self._draft(transcript, classification.type_def, captured_at, timezone)
 
-        # Step 2: Extract
-        t2 = time.perf_counter()
-        raw_fields = extract(transcript, type_def, self._llm)
-        logger.info("Extracted in %.3fs for %s", time.perf_counter() - t2, type_def.name)
-
-        summary = self._build_summary(raw_fields, type_def.name, transcript)
-
-        # Step 3: Resolve
-        t3 = time.perf_counter()
-        resolved = resolve(raw_fields, type_def, timezone, captured_at)
-        logger.info("Resolved fields in %.3fs", time.perf_counter() - t3)
-
-        # Step 4: Validate
-        missing = validate(resolved, type_def)
-
-        # Retry once if required fields were missed
-        if missing:
-            logger.info("Missing required fields %s, retrying extraction once...", missing)
-            try:
-                raw_retry = extract(transcript, type_def, self._llm)
-                resolved_retry = resolve(raw_retry, type_def, timezone, captured_at)
-                missing_retry = validate(resolved_retry, type_def)
-                if len(missing_retry) < len(missing):
-                    resolved = resolved_retry
-                    missing = missing_retry
-                    summary = self._build_summary(raw_retry, type_def.name, transcript)
-            except Exception as retry_err:
-                logger.warning("Extraction retry failed: %s", retry_err)
-
-        return NoteEnvelope(
-            id=str(uuid4()),
-            created_at=captured_at,
-            timezone=timezone,
-            transcript=transcript,
-            type_name=type_def.name,
-            type_version=type_def.version,
-            summary=summary,
-            fields=resolved,
-            status="needs_review",
-            missing_fields=missing,
-        )
-
-    def _retype(
+    def _draft(
         self, transcript: str, type_def: TypeDefinition, captured_at: str, timezone: str
     ) -> NoteEnvelope:
-        raw_fields = extract(transcript, type_def, self._llm)
-        summary = self._build_summary(raw_fields, type_def.name, transcript)
-        resolved = resolve(raw_fields, type_def, timezone, captured_at)
-        missing = validate(resolved, type_def)
+        raw_fields = _timed("extract", lambda: extract(transcript, type_def, self._llm))
+        fields = resolve(raw_fields, type_def, timezone, captured_at)
+
+        refined = _timed("refine", lambda: refine(transcript, type_def, fields, self._llm))
+        if refined is None:
+            summary = fallback_summary(transcript)
+        else:
+            fields = resolve(refined.fields, type_def, timezone, captured_at)
+            summary = refined.summary
+
+        warnings = self._warnings(transcript, fields, type_def, captured_at, timezone)
 
         return NoteEnvelope(
             id=str(uuid4()),
@@ -117,50 +111,27 @@ class PipelineService:
             type_name=type_def.name,
             type_version=type_def.version,
             summary=summary,
-            fields=resolved,
+            fields=fields,
             status="needs_review",
-            missing_fields=missing,
+            missing_fields=validate(fields, type_def),
+            warnings=warnings,
         )
 
-    def _build_summary(self, raw_fields: dict[str, Any], type_name: str, transcript: str) -> str:
-        """Create a short, clean one-line summary from fields or transcript."""
-        if "summary" in raw_fields and raw_fields["summary"]:
-            return str(raw_fields.pop("summary")).strip()
-
-        if type_name == "payment":
-            person = raw_fields.get("person") or "Someone"
-            amount_dict = raw_fields.get("amount")
-            amount_str = ""
-            if isinstance(amount_dict, dict):
-                amount_str = f" {amount_dict.get('amount', '')} {amount_dict.get('currency', '')}"
-            elif amount_dict:
-                amount_str = f" {amount_dict}"
-            direction = raw_fields.get("direction")
-            if direction == "they_owe_me":
-                return f"{person} owes{amount_str}"
-            elif direction == "i_owe_them":
-                return f"Owe {person}{amount_str}"
-            return f"Payment: {person}{amount_str}"
-
-        if type_name == "promise":
-            person = raw_fields.get("person") or "Someone"
-            commitment = raw_fields.get("commitment") or "commitment"
-            return f"{person}: {commitment}"
-
-        if type_name == "event":
-            title = raw_fields.get("title") or "Event"
-            date_val = raw_fields.get("date")
-            date_str = (
-                f" on {date_val.get('resolved') or date_val.get('spoken')}"
-                if isinstance(date_val, dict)
-                else ""
-            )
-            return f"{title}{date_str}"
-
-        if type_name == "info":
-            topic = raw_fields.get("topic") or "Info"
-            return f"Info: {topic}"
-
-        # General
-        clean = transcript.strip().replace("\n", " ")
-        return clean[:70] + "..." if len(clean) > 70 else clean
+    def _warnings(
+        self,
+        transcript: str,
+        fields: dict[str, Any],
+        type_def: TypeDefinition,
+        captured_at: str,
+        timezone: str,
+    ) -> list[NoteWarning]:
+        if self._plausibility_rules is None:
+            return []
+        concerns = find_concerns(fields, type_def, self._plausibility_rules, captured_at, timezone)
+        if concerns:
+            return [NoteWarning(field=c.field, message=c.message) for c in concerns]
+        # The rules are precise and free, so the model is only asked when they found nothing;
+        # that also avoids warning twice about the same value.
+        today = capture_day(captured_at, timezone)
+        reason = _timed("plausibility", lambda: check_plausibility(transcript, today, self._llm))
+        return [NoteWarning(message=reason)] if reason else []

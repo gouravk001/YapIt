@@ -28,11 +28,15 @@ def resolve(
 
     for field_def in type_def.fields:
         raw = fields.get(field_def.name)
-        if raw is None:
+        if raw is None or raw == "" or raw == []:
             continue
+        if isinstance(raw, str):
+            raw = raw.strip()
 
         resolver = _RESOLVER_MAP.get(field_def.field_type)
-        if resolver is not None:
+        if field_def.field_type == "enum":
+            resolved[field_def.name] = field_def.from_llm_value(raw)
+        elif resolver is not None:
             try:
                 resolved[field_def.name] = resolver(raw, timezone=timezone, captured_at=captured_at)
             except Exception as exc:
@@ -46,9 +50,8 @@ def resolve(
         elif field_def.field_type == "list" and isinstance(raw, list):
             item_resolver = _RESOLVER_MAP.get(field_def.item_type or "")
             if item_resolver is not None:
-                resolved[field_def.name] = [
-                    _try_resolve(item_resolver, item, timezone, captured_at) for item in raw
-                ]
+                items = [_try_resolve(item_resolver, item, timezone, captured_at) for item in raw]
+                resolved[field_def.name] = [item for item in items if item is not None]
             else:
                 resolved[field_def.name] = raw
         else:

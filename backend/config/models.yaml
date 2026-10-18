@@ -8,6 +8,23 @@ models:
     device_fallback: cpu
     compute_type_fallback: int8
     vram_mb: 600
+    # Drops silence before decoding, which stops Whisper inventing text from noise.
+    vad_filter: true
+    quality:
+      min_words: 2
+      # Whisper's own defaults for "probably wrong" and "probably not speech".
+      min_avg_logprob: -1.0
+      max_no_speech_prob: 0.6
+      # Phrases Whisper is known to produce from silence or background noise.
+      known_hallucinations:
+        - thanks for watching
+        - thank you for watching
+        - thank you so much for watching
+        - please subscribe
+        - subscribe to my channel
+        - see you in the next video
+        - thank you
+        - you
 
   - id: gemma3-4b-q4
     role: llm
@@ -16,6 +33,8 @@ models:
     temperature: 0.1
     top_p: 0.9
     num_ctx: 4096
+    # Caps a single reply. Notes are short; a runaway reply is cut off instead of filling num_ctx.
+    num_predict: 400
     vram_mb: 3000
 
 active:

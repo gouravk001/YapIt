@@ -59,4 +59,3 @@ def test_resolve_dict_input():
 
     res_missing_curr = resolve_money({"amount": "300"})
     assert res_missing_curr == {"amount": 300.0, "currency": "INR"}
-

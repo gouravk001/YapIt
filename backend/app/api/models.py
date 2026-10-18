@@ -6,6 +6,13 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 
+class NoteWarning(BaseModel):
+    """Something in a draft the user should double-check; never stored with the note."""
+
+    field: str | None = None
+    message: str
+
+
 class NoteEnvelope(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     created_at: str
@@ -17,6 +24,7 @@ class NoteEnvelope(BaseModel):
     fields: dict[str, Any]
     status: Literal["needs_review", "confirmed"] = "needs_review"
     missing_fields: list[str] = Field(default_factory=list)
+    warnings: list[NoteWarning] = Field(default_factory=list)
 
 
 class NoteUpdateRequest(BaseModel):

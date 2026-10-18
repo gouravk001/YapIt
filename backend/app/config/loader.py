@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 
+from app.config.checks_config import PlausibilityRules
 from app.config.models_config import ActiveModels, ModelEntry, ModelRegistry
 from app.config.types_config import TypeDefinition
 
@@ -89,3 +90,18 @@ def load_model_registry() -> ModelRegistry:
         raise ValueError(f"Invalid 'active' block in models.yaml: {exc}") from exc
 
     return ModelRegistry(models=model_entries, active=active)
+
+
+def load_checks() -> PlausibilityRules:
+    """Load and validate the plausibility thresholds from checks.yaml."""
+    checks_path = _config_dir() / "checks.yaml"
+    if not checks_path.exists():
+        raise ValueError(f"Checks config file not found: {checks_path}")
+
+    with checks_path.open("r", encoding="utf-8") as fh:
+        raw = yaml.safe_load(fh)
+
+    try:
+        return PlausibilityRules.model_validate(raw)
+    except Exception as exc:
+        raise ValueError(f"Invalid checks.yaml: {exc}") from exc

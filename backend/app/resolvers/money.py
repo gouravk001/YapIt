@@ -45,6 +45,8 @@ MULTIPLIERS = {
     "million": 1_000_000,
 }
 
+CURRENCY_SYMBOLS = {"INR": "₹", "USD": "$", "EUR": "€", "GBP": "£"}
+
 CURRENCY_PATTERNS = [
     (r"(?:\$|\b(?:dollars?|usd|bucks?)\b)", "USD"),
     (r"(?:€|\b(?:euros?|eur)\b)", "EUR"),
@@ -142,3 +144,26 @@ def _extract_word_amount(text: str) -> float | None:
 
     total += current
     return float(total) if matched_any and total > 0 else None
+
+
+def _group_indian(whole: int) -> str:
+    digits = str(whole)
+    if len(digits) <= 3:
+        return digits
+    head, tail = digits[:-3], digits[-3:]
+    pairs = []
+    while len(head) > 2:
+        pairs.insert(0, head[-2:])
+        head = head[:-2]
+    return ",".join([head, *pairs, tail])
+
+
+def format_money(money: dict[str, Any]) -> str:
+    """Render {"amount", "currency"} the way a person would write it, e.g. ₹1,50,000."""
+    amount = float(money["amount"])
+    currency = money.get("currency", "INR")
+    symbol = CURRENCY_SYMBOLS.get(currency, f"{currency} ")
+    whole = int(amount)
+    grouped = _group_indian(whole) if currency == "INR" else f"{whole:,}"
+    cents = f"{amount - whole:.2f}"[1:] if amount != whole else ""
+    return f"{symbol}{grouped}{cents}"

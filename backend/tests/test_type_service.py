@@ -11,10 +11,13 @@ from app.storage.queries import get_type_definition
 
 
 def _type(
-    version: int, field_names: list[str], description: str = "A test type."
+    version: int,
+    field_names: list[str],
+    description: str = "A test type.",
+    field_note: str = "",
 ) -> TypeDefinition:
     fields = [
-        FieldDefinition(name=n, field_type="text", required=False, description=n)
+        FieldDefinition(name=n, field_type="text", required=False, description=n + field_note)
         for n in field_names
     ]
     return TypeDefinition(name="todo", version=version, description=description, fields=fields)
@@ -43,6 +46,14 @@ async def test_description_change_updates_in_place(db_path):
 
     stored = await get_type_definition("todo", 1, db_path)
     assert stored["description"] == "Reworded."
+
+
+async def test_field_description_change_needs_no_version_bump(db_path):
+    await seed_types([_type(1, ["task"])], db_path)
+    await seed_types([_type(1, ["task"], field_note=" (clearer wording)")], db_path)
+
+    stored = await get_type_definition("todo", 1, db_path)
+    assert stored["fields"][0]["description"] == "task (clearer wording)"
 
 
 async def test_field_change_without_version_bump_is_rejected(db_path):

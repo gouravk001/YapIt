@@ -1,156 +1,138 @@
+import { ChevronDown, Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import { formatCapturedDateTime, formatCapturedTime, humanize, isEmptyValue } from "../lib/format";
+import { typeLabel } from "../lib/noteTypes";
+import FieldValue from "./FieldValue";
+import TypeIcon from "./TypeIcon";
 
-const TYPE_COLORS = {
-  payment: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
-  promise: "bg-amber-500/15 border-amber-500/30 text-amber-300",
-  event: "bg-blue-500/15 border-blue-500/30 text-blue-300",
-  info: "bg-purple-500/15 border-purple-500/30 text-purple-300",
-  general: "bg-slate-500/15 border-slate-500/30 text-slate-300",
-};
+function fieldEntries(note, typeDef) {
+  const definitions = typeDef?.fields || [];
+  const known = definitions
+    .filter((f) => !isEmptyValue(note.fields?.[f.name]))
+    .map((f) => ({ name: f.name, fieldType: f.field_type, value: note.fields[f.name] }));
+  const knownNames = new Set(definitions.map((f) => f.name));
+  const extra = Object.entries(note.fields || {})
+    .filter(([name, value]) => !knownNames.has(name) && !isEmptyValue(value))
+    .map(([name, value]) => ({ name, fieldType: null, value }));
+  return [...known, ...extra];
+}
 
-export default function NoteCard({ note, onDelete, onEdit }) {
+function DeleteButton({ onDelete }) {
+  const [confirming, setConfirming] = useState(false);
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="btn-ghost px-2.5 py-1.5 text-xs hover:text-red-300"
+      >
+        <Trash2 size={14} aria-hidden="true" />
+        Delete
+      </button>
+    );
+  }
+  return (
+    <span className="flex animate-fade-in items-center gap-1" role="group" aria-label="Confirm delete">
+      <span className="px-1 text-xs text-slate-400">Delete this note?</span>
+      <button
+        type="button"
+        onClick={onDelete}
+        autoFocus
+        className="btn px-2.5 py-1.5 text-xs bg-red-500/90 text-white hover:bg-red-500"
+      >
+        Delete
+      </button>
+      <button type="button" onClick={() => setConfirming(false)} className="btn-ghost px-2.5 py-1.5 text-xs">
+        Keep
+      </button>
+    </span>
+  );
+}
+
+export default function NoteCard({ note, typeDef, onDelete, onEdit }) {
   const [expanded, setExpanded] = useState(false);
-
-  const typeClass =
-    TYPE_COLORS[note.type_name] || "bg-indigo-500/15 border-indigo-500/30 text-indigo-300";
-
-  const formatDate = (isoString, tz) => {
-    try {
-      return new Intl.DateTimeFormat(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: tz || undefined,
-      }).format(new Date(isoString));
-    } catch {
-      return isoString;
-    }
-  };
-
-  const renderFieldValue = (val) => {
-    if (val === null || val === undefined) return "—";
-
-    // Date object {spoken, resolved}
-    if (typeof val === "object" && ("resolved" in val || "spoken" in val)) {
-      const res = val.resolved || "unresolved";
-      const spk = val.spoken ? ` ("${val.spoken}")` : "";
-      return `${res}${spk}`;
-    }
-
-    // Money object {amount, currency}
-    if (typeof val === "object" && "amount" in val) {
-      const curr = val.currency || "INR";
-      const sym = curr === "INR" ? "₹" : curr === "USD" ? "$" : curr === "EUR" ? "€" : curr === "GBP" ? "£" : "";
-      return `${sym}${val.amount} ${curr}`;
-    }
-
-    // List
-    if (Array.isArray(val)) {
-      return val.join(", ");
-    }
-
-    if (typeof val === "boolean") {
-      return val ? "Yes" : "No";
-    }
-
-    return String(val);
-  };
-
-  const hasMissing = note.missing_fields && note.missing_fields.length > 0;
+  const entries = fieldEntries(note, typeDef);
+  const needsAttention = note.missing_fields?.length > 0;
+  const transcriptId = `transcript-${note.id}`;
 
   return (
-    <article className="rounded-2xl bg-white/[0.04] backdrop-blur-md border border-white/10 p-5 hover:border-white/20 transition-all flex flex-col gap-3 shadow-lg">
-      {/* Header: Type Badge, Created At, Missing Warning */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${typeClass}`}
-          >
-            {note.type_name}
-          </span>
+    <article className="group surface animate-rise p-4 transition hover:border-white/15 sm:p-5">
+      <div className="flex items-start gap-3.5">
+        <TypeIcon typeName={note.type_name} />
 
-          {hasMissing && (
-            <span className="text-[11px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <span>⚠</span> Needs attention
-            </span>
-          )}
-        </div>
-
-        <span className="text-xs text-slate-400">
-          {formatDate(note.created_at, note.timezone)}
-        </span>
-      </div>
-
-      {/* Summary */}
-      <h3 className="text-lg font-bold text-white tracking-tight">
-        {note.summary || "Voice Note"}
-      </h3>
-
-      {/* Key Fields */}
-      <div className="flex flex-wrap gap-2 pt-1">
-        {Object.entries(note.fields || {}).map(([key, value]) => {
-          if (value === null || value === undefined || value === "") return null;
-          return (
-            <div
-              key={key}
-              className="text-xs bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-slate-300 flex items-center gap-1.5"
-            >
-              <span className="text-slate-400 capitalize">{key.replace(/_/g, " ")}:</span>
-              <span className="font-semibold text-slate-100">{renderFieldValue(value)}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Transcript collapsible */}
-      {expanded && (
-        <div className="mt-2 pt-3 border-t border-white/10 text-xs text-slate-300 space-y-2 animate-fadeIn">
-          <div>
-            <span className="text-slate-400 font-semibold block mb-0.5">Spoken Transcript:</span>
-            <p className="italic text-slate-200 bg-black/20 p-2.5 rounded-lg border border-white/5">
-              "{note.transcript}"
-            </p>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+            <span className="font-medium text-slate-300">{typeLabel(note.type_name)}</span>
+            <span aria-hidden="true">·</span>
+            <time dateTime={note.created_at} title={formatCapturedDateTime(note.created_at, note.timezone)}>
+              {formatCapturedTime(note.created_at, note.timezone)}
+            </time>
+            {needsAttention && (
+              <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 font-medium text-amber-300">
+                <TriangleAlert size={12} aria-hidden="true" />
+                Needs attention
+              </span>
+            )}
           </div>
-          {hasMissing && (
-            <p className="text-amber-400/90 text-[11px]">
-              Missing or incomplete required fields: {note.missing_fields.join(", ")}
-            </p>
+
+          <h3 className="mt-1 text-[15px] font-semibold leading-snug text-white sm:text-base">
+            {note.summary || "Untitled note"}
+          </h3>
+
+          {entries.length > 0 && (
+            <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              {entries.map(({ name, fieldType, value }) => (
+                <div key={name} className="flex min-w-0 items-baseline gap-2">
+                  <dt className="shrink-0 text-xs text-slate-500">{humanize(name)}</dt>
+                  <dd className="min-w-0 truncate font-medium text-slate-200">
+                    <FieldValue fieldType={fieldType} value={value} />
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {expanded && (
+            <div id={transcriptId} className="mt-4 animate-fade-in space-y-2 border-t border-white/6 pt-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Transcript</p>
+              <blockquote className="border-l-2 border-accent/40 pl-3 text-sm italic leading-relaxed text-slate-300">
+                {note.transcript}
+              </blockquote>
+              {needsAttention && (
+                <p className="text-xs text-amber-300/90">
+                  Missing or invalid: {note.missing_fields.map(humanize).join(", ")}
+                </p>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Actions */}
-      <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-xs">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/6 pt-2.5">
         <button
           type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="text-indigo-400 hover:text-indigo-300 font-medium transition cursor-pointer"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          aria-controls={transcriptId}
+          className="btn-ghost -ml-2 px-2 py-1.5 text-xs text-slate-400"
         >
-          {expanded ? "Show less" : "View transcript"}
+          <ChevronDown
+            size={14}
+            className={`transition-transform ${expanded ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+          {expanded ? "Hide transcript" : "Show transcript"}
         </button>
 
-        <div className="flex items-center gap-2">
-          {onEdit && (
-            <button
-              type="button"
-              onClick={() => onEdit(note)}
-              className="px-3 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 font-medium transition cursor-pointer"
-            >
-              Edit
-            </button>
-          )}
-
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(note.id)}
-              className="px-3 py-1 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 font-medium transition cursor-pointer"
-            >
-              Delete
-            </button>
-          )}
+        <div className="flex items-center gap-1 transition md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+          <button type="button" onClick={() => onEdit(note)} className="btn-ghost px-2.5 py-1.5 text-xs">
+            <Pencil size={14} aria-hidden="true" />
+            Edit
+          </button>
+          <DeleteButton onDelete={() => onDelete(note.id)} />
         </div>
       </div>
     </article>
   );
 }
-

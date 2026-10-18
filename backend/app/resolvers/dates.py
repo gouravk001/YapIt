@@ -7,6 +7,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 NUMBER_WORDS = {
+    "a": 1,
     "one": 1,
     "two": 2,
     "three": 3,
@@ -24,7 +25,41 @@ NUMBER_WORDS = {
     "fifteen": 15,
     "twenty": 20,
     "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
 }
+
+SATURDAY = 5
+
+MONTHS = {
+    name: number
+    for number, names in enumerate(
+        [
+            ("january", "jan"),
+            ("february", "feb"),
+            ("march", "mar"),
+            ("april", "apr"),
+            ("may",),
+            ("june", "jun"),
+            ("july", "jul"),
+            ("august", "aug"),
+            ("september", "sep", "sept"),
+            ("october", "oct"),
+            ("november", "nov"),
+            ("december", "dec"),
+        ],
+        start=1,
+    )
+    for name in names
+}
+_MONTH = "(" + "|".join(sorted(MONTHS, key=len, reverse=True)) + ")"
+_DAY = r"(\d{1,2})(?:st|nd|rd|th)?"
+_YEAR = r"(?:,?\s+(\d{4}))?"
+_LEAP_YEAR_CYCLE = 4
 
 WEEKDAYS = {
     "monday": 0,
@@ -61,6 +96,11 @@ def _parse_anchor(captured_at: str | None, timezone: str) -> datetime:
     return datetime.now(tz)
 
 
+def capture_day(captured_at: str | None, timezone: str) -> date:
+    """The calendar day the note was captured on, in the capture timezone."""
+    return _parse_anchor(captured_at, timezone).date()
+
+
 def resolve_date(
     raw: Any,
     timezone: str = "UTC",
@@ -78,6 +118,8 @@ def resolve_date(
       (1 to 7 days in the future). If anchor is Friday, 'Friday' means next Friday (7 days).
     - 'Next <weekday>' (e.g. 'next Friday'): The occurrence in the following week
       (7 to 13 days in the future, skipping the immediately upcoming occurrence).
+    - 'This weekend' / 'the weekend': the coming Saturday, or today if it is already the weekend.
+    - 'Next weekend': the Saturday after that, following the same rule as 'next <weekday>'.
     """
     if isinstance(raw, dict):
         spoken = str(raw.get("spoken") or raw.get("raw") or raw.get("resolved") or "")
@@ -98,21 +140,73 @@ def resolve_date(
     }
 
 
+def _add_months(anchor: date, months: int) -> date:
+    """Same day-of-month N months later, clamped to the month's last day (31 Jan + 1 = 28 Feb)."""
+    month_index = anchor.month - 1 + months
+    year, month = anchor.year + month_index // 12, month_index % 12 + 1
+    return date(year, month, min(anchor.day, calendar.monthrange(year, month)[1]))
+
+
+def _resolve_named_month(text: str, anchor: date) -> date | bool | None:
+    """Dates with a month name: "3 March", "the 30th of February", "March 3rd 2027", "December 2028".
+
+    Returns None when no month is named, False when the date does not exist (30 February), so
+    later patterns do not reinterpret the day number against the current month.
+    """
+    day_first = re.search(rf"\b{_DAY}\s+(?:of\s+)?{_MONTH}\b{_YEAR}", text)
+    month_first = re.search(rf"\b{_MONTH}\s+{_DAY}\b(?!\d){_YEAR}", text)
+    month_year = re.search(rf"\b{_MONTH}\s+(\d{{4}})\b", text)
+    if day_first:
+        day, month, year = day_first.group(1), day_first.group(2), day_first.group(3)
+    elif month_year:
+        day, month, year = "1", month_year.group(1), month_year.group(2)
+    elif month_first:
+        day, month, year = month_first.group(2), month_first.group(1), month_first.group(3)
+    else:
+        return None
+
+    month_number = MONTHS[month]
+    if year:
+        try:
+            return date(int(year), month_number, int(day))
+        except ValueError:
+            return False
+    # Without a year, take the next time that day comes round (29 Feb may be years away).
+    for candidate_year in range(anchor.year, anchor.year + _LEAP_YEAR_CYCLE + 1):
+        try:
+            target = date(candidate_year, month_number, int(day))
+        except ValueError:
+            continue
+        if target >= anchor:
+            return target
+    return False
+
+
 def _resolve_phrase(phrase: str, anchor: date) -> date | None:
     text = phrase.strip().lower()
 
-    # Direct keywords
-    if text == "today":
-        return anchor
-    if text == "tomorrow":
-        return anchor + timedelta(days=1)
-    if text in ("day after tomorrow", "the day after tomorrow"):
+    # Direct keywords, also inside longer phrases like "by tomorrow evening"
+    if re.search(r"\byesterday\b", text):
+        return anchor - timedelta(days=1)
+    if re.search(r"\bday after tomorrow\b", text):
         return anchor + timedelta(days=2)
+    if re.search(r"\btomorrow\b", text):
+        return anchor + timedelta(days=1)
+    if re.search(r"\b(today|tonight|this (morning|afternoon|evening))\b", text):
+        return anchor
 
     # End of month
-    if text in ("end of month", "end of the month", "month end"):
+    if re.search(r"\b(end of (the |this )?month|month end)\b", text):
         last_day = calendar.monthrange(anchor.year, anchor.month)[1]
         return date(anchor.year, anchor.month, last_day)
+
+    if re.search(r"\bnext weekend\b", text):
+        days_ahead = (SATURDAY - anchor.weekday()) % 7
+        return anchor + timedelta(days=days_ahead + 7 if days_ahead else 7)
+    if re.search(r"\bweekend\b", text):
+        if anchor.weekday() >= SATURDAY:
+            return anchor
+        return anchor + timedelta(days=SATURDAY - anchor.weekday())
 
     # Next week (defaults to Monday of next week)
     if text == "next week":
@@ -139,16 +233,24 @@ def _resolve_phrase(phrase: str, anchor: date) -> date | None:
                 days_ahead = 7  # Always next upcoming, not today
             return anchor + timedelta(days=days_ahead)
 
-    # In N days / weeks
-    match = re.search(r"in\s+(\d+|[a-z]+)\s+(day|days|week|weeks)", text)
+    # (In / after) N days, weeks, months or years
+    match = re.search(r"\b(\d+|[a-z]+)\s+(day|week|month|year)s?\b", text)
     if match:
         num_str = match.group(1)
         unit = match.group(2)
         count = int(num_str) if num_str.isdigit() else NUMBER_WORDS.get(num_str, 0)
         if count > 0:
-            if "week" in unit:
+            if unit == "year":
+                return _add_months(anchor, 12 * count)
+            if unit == "month":
+                return _add_months(anchor, count)
+            if unit == "week":
                 return anchor + timedelta(weeks=count)
             return anchor + timedelta(days=count)
+
+    named = _resolve_named_month(text, anchor)
+    if named is not None:
+        return named or None
 
     # Ordinal dates: e.g. "the 25th", "25th", "1st of next month"
     ord_match = re.search(r"\b(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)\b", text)
@@ -182,4 +284,3 @@ def _resolve_phrase(phrase: str, anchor: date) -> date | None:
             pass
 
     return None
-

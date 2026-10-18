@@ -1,0 +1,16 @@
+# Plausibility checks run on every draft. A failed check never blocks a note: the review screen
+# shows the warning and the user decides whether to save it.
+
+date:
+  # Dates further ahead than this are flagged ("40 years from now").
+  max_years_ahead: 5
+  # Dates more than this many days in the past are flagged (a due date that already passed).
+  max_days_past: 1
+
+money:
+  # Amounts above these are flagged as unusually large for a personal note.
+  max_amount:
+    INR: 10000000 # ₹1 crore
+    USD: 100000
+    EUR: 100000
+    GBP: 100000

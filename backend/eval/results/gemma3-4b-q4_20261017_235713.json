@@ -1,0 +1,18 @@
+{
+  "model_id": "gemma3-4b-q4",
+  "model_name": "gemma3:4b",
+  "timestamp": "2026-10-17T23:57:13.373189",
+  "total_samples": 40,
+  "classification_accuracy": 92.5,
+  "field_accuracy": 73.58,
+  "needs_review_fraction": 1.0,
+  "average_latency_sec": 1.128,
+  "vram_used_mb": 5909,
+  "per_type_accuracy": {
+    "payment": 90.0,
+    "promise": 100.0,
+    "event": 100.0,
+    "info": 100.0,
+    "general": 66.67
+  }
+}

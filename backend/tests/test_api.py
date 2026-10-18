@@ -5,29 +5,40 @@ from httpx import ASGITransport, AsyncClient
 
 from app.config.loader import load_types
 from app.main import app
-from app.providers.base import LLM, Transcriber
+from app.providers.base import LLM, Transcriber, Transcription
 from app.services.pipeline_service import PipelineService
 from app.storage.database import init_db
 
 
 class MockTranscriber(Transcriber):
-    def transcribe(self, audio_path: str) -> str:
-        return "Ravi owes me 500 rupees, he said he will pay by next Friday."
+    def transcribe(self, audio_path: str) -> Transcription:
+        return Transcription(
+            text="Ravi owes me 500 rupees, he said he will pay by next Friday.",
+            avg_logprob=-0.2,
+            no_speech_prob=0.01,
+        )
 
 
 class MockLLM(LLM):
     def generate(self, prompt: str, json_schema: dict | None = None) -> str | dict:
-        if json_schema and "type_name" in json_schema.get("properties", {}):
-            return {"type_name": "payment", "confidence": 0.95}
-        if json_schema and "person" in json_schema.get("properties", {}):
+        properties = (json_schema or {}).get("properties", {})
+        if "kind" in properties:
+            return {"kind": "note", "type_name": "payment"}
+        if "summary" in properties:
             return {
                 "person": "Ravi",
                 "direction": "they_owe_me",
-                "amount": "500 rupees",
+                "amount": "₹500",
                 "due_date": "next Friday",
-                "summary": "Ravi owes 500 rupees by next Friday",
+                "note": "",
+                "summary": "Ravi owes me ₹500 by next Friday.",
             }
-        return "Ravi owes 500 rupees by next Friday"
+        return {
+            "person": "ravi",
+            "direction": "they_owe_me",
+            "amount": "500 rupees",
+            "due_date": "next Friday",
+        }
 
 
 @pytest.fixture
@@ -77,7 +88,11 @@ async def test_process_text(client):
     assert draft["type_name"] == "payment"
     assert draft["status"] == "needs_review"
     assert draft["fields"]["person"] == "Ravi"
-    assert draft["fields"]["amount"]["amount"] == 500.0
+    assert draft["fields"]["amount"] == {"amount": 500.0, "currency": "INR"}
+    assert draft["fields"]["due_date"] == {"spoken": "next Friday", "resolved": "2026-10-30"}
+    assert draft["summary"] == "Ravi owes me ₹500 by next Friday"
+    assert "note" not in draft["fields"]
+    assert draft["missing_fields"] == []
 
 
 async def test_save_and_list_note(client):
@@ -121,3 +136,29 @@ async def test_save_and_list_note(client):
     # Confirm deletion
     list_res_after = await client.get("/notes")
     assert len(list_res_after.json()) == 0
+
+
+async def test_date_filter_and_order_compare_instants_across_offsets(client):
+    base = {
+        "timezone": "Asia/Kolkata",
+        "transcript": "t",
+        "type_name": "general",
+        "type_version": 1,
+        "summary": "s",
+        "fields": {},
+        "status": "confirmed",
+        "missing_fields": [],
+    }
+    # 18:40Z, written with a +05:30 offset, and 19:10Z written in UTC.
+    await client.post(
+        "/notes", json={**base, "id": "early", "created_at": "2026-10-18T00:10:00+05:30"}
+    )
+    await client.post(
+        "/notes", json={**base, "id": "late", "created_at": "2026-10-17T19:10:00.000Z"}
+    )
+
+    res = await client.get("/notes", params={"date_from": "2026-10-17T19:00:00.000Z"})
+    assert [n["id"] for n in res.json()] == ["late"]
+
+    res = await client.get("/notes")
+    assert [n["id"] for n in res.json()] == ["late", "early"]

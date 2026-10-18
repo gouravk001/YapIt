@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from dataclasses import dataclass
 
 from app.config.types_config import TypeDefinition
+from app.pipeline.llm_json import generate_json
 from app.pipeline.prompt_builder import classification_prompt
-from app.pipeline.schema_builder import build_classification_schema
+from app.pipeline.schema_builder import NOT_A_NOTE_KINDS, build_classification_schema
 from app.providers.base import LLM
 
 logger = logging.getLogger(__name__)
@@ -13,28 +14,27 @@ logger = logging.getLogger(__name__)
 _FALLBACK_TYPE = "general"
 
 
+@dataclass(frozen=True)
+class Classification:
+    is_note: bool
+    type_def: TypeDefinition
+
+
 def classify(
     transcript: str,
     type_definitions: list[TypeDefinition],
     llm: LLM,
-) -> TypeDefinition:
-    """Classify transcript into a TypeDefinition using the LLM."""
-    type_names = [td.name for td in type_definitions]
-    schema = build_classification_schema(type_names)
+) -> Classification:
+    """Decide whether the transcript is a note and, if so, which type fits it."""
+    schema = build_classification_schema([td.name for td in type_definitions])
     prompt = classification_prompt(transcript, type_definitions)
+    result = generate_json(llm, prompt, schema, step="classify") or {}
 
-    result: Any = llm.generate(prompt, json_schema=schema)
+    by_name = {td.name: td for td in type_definitions}
+    chosen = by_name.get(result.get("type_name", ""))
+    if chosen is None:
+        logger.warning("Classifier chose %r — falling back to general", result.get("type_name"))
+        chosen = by_name[_FALLBACK_TYPE]
 
-    if isinstance(result, dict):
-        chosen_name = result.get("type_name", _FALLBACK_TYPE)
-    else:
-        logger.warning("Classification returned non-dict: %s — falling back to general", result)
-        chosen_name = _FALLBACK_TYPE
-
-    matched = next((td for td in type_definitions if td.name == chosen_name), None)
-    if matched is None:
-        logger.warning("LLM chose unknown type %r — falling back to general", chosen_name)
-        matched = next(td for td in type_definitions if td.name == _FALLBACK_TYPE)
-
-    logger.debug("Classified transcript as type=%r", matched.name)
-    return matched
+    # A malformed answer must not discard the user's note, so only a named non-note kind rejects.
+    return Classification(is_note=result.get("kind") not in NOT_A_NOTE_KINDS, type_def=chosen)

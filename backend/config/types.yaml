@@ -14,10 +14,16 @@ types:
       - name: direction
         field_type: enum
         required: true
-        description: Whether the person owes you money or you owe them.
+        description: >
+          they_owe_me when the other person must pay the speaker ("Ravi owes me", "I lent
+          Ravi", "Ravi will pay me back"). i_owe_them when the speaker must pay the other person
+          ("I owe Ravi", "I have to give Ravi", "I borrowed from Ravi", "pay Ravi back").
         allowed_values:
           - they_owe_me
           - i_owe_them
+        value_labels:
+          they_owe_me: I will receive the money
+          i_owe_them: I will give the money
       - name: amount
         field_type: money
         required: true
@@ -31,25 +37,25 @@ types:
         required: false
         description: Optional context about what the payment is for.
     examples:
-      - transcript: "Remind me that John owes me forty dollars for the dinner we had last Friday."
+      - transcript: "I borrowed 2k from Sneha, I'll pay her back on Sunday."
         expected_fields:
-          person: John
-          direction: they_owe_me
-          amount: "40.00 USD"
-          note: dinner last Friday
-      - transcript: "I need to pay Sarah back fifty bucks I borrowed for the concert tickets."
-        expected_fields:
-          person: Sarah
+          person: Sneha
           direction: i_owe_them
-          amount: "50.00 USD"
-          note: concert tickets
-      - transcript: "Alex still hasn't paid me the twenty-five dollars from splitting the Uber last weekend, he said he'd pay by Monday."
+          amount: "₹2,000"
+          due_date: Sunday
+      - transcript: "Rohit owes me 1200 rupees for the movie tickets."
         expected_fields:
-          person: Alex
+          person: Rohit
           direction: they_owe_me
-          amount: "25.00 USD"
-          due_date: next Monday
-          note: splitting the Uber last weekend
+          amount: "₹1,200"
+          note: movie tickets
+      - transcript: "Lent Vikram 50 thousand for his bike, he said he'll return it end of the month."
+        expected_fields:
+          person: Vikram
+          direction: they_owe_me
+          amount: "₹50,000"
+          due_date: end of the month
+          note: his bike
 
   - name: promise
     version: 1
@@ -64,7 +70,9 @@ types:
       - name: person
         field_type: person
         required: true
-        description: The person who made or received the commitment.
+        description: >
+          The other person in the promise: who the speaker promised something to, or who
+          promised something to the speaker. Never the speaker themselves.
       - name: commitment
         field_type: text
         required: true
@@ -98,7 +106,8 @@ types:
       activity. Look for speech patterns like "there's a", "we're having", "meeting
       at", "party on", "appointment", "call scheduled for", "dinner tonight", "catch
       up on", specific dates and times, and mentions of location or attendees. The
-      defining feature is a scheduled occurrence, not just a task.
+      defining feature is a scheduled occurrence with a stated day or time; a task or
+      errand without one (for example "buy milk on the way home") is general, not an event.
     fields:
       - name: title
         field_type: text
@@ -173,7 +182,8 @@ types:
     version: 1
     description: >
       Use this type as a catch-all fallback when the transcript does not clearly
-      fit payment, promise, event, or info patterns. This includes vague reminders,
+      fit payment, promise, event, or info patterns. This includes to-dos, errands and
+      shopping lists without a set day or time, vague reminders,
       mixed content, stream-of-consciousness notes, or anything ambiguous where
       forcing a specific type would lose meaning. If uncertain between general and
       another type, prefer the more specific type only when confident.

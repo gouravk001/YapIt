@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import model_routes, notes, types
 from app.api.error_handlers import register_error_handlers
-from app.config.loader import load_model_registry, load_types
+from app.config.loader import load_checks, load_model_registry, load_types
 from app.providers.factory import create_providers
 from app.services.note_service import NoteService
 from app.services.pipeline_service import PipelineService
@@ -44,7 +44,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.model_registry = registry
     app.state.types = type_definitions
     app.state.type_definitions = type_definitions
-    app.state.pipeline_service = PipelineService(transcriber, llm, type_definitions)
+    app.state.pipeline_service = PipelineService(
+        transcriber,
+        llm,
+        type_definitions,
+        quality_rules=registry.get_active("transcriber").quality,
+        plausibility_rules=load_checks(),
+    )
     app.state.note_service = NoteService(db_path=db_path)
 
     logger.info("YapIt backend initialized and ready.")

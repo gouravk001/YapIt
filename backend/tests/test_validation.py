@@ -70,4 +70,3 @@ def test_validate_invalid_enum():
     }
     missing = validate(fields, type_def)
     assert missing == ["direction"]
-

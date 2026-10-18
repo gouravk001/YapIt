@@ -1,329 +1,343 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import microphone from "../assets/microphone.png";
-import WaveformBars from "../components/WaveformBars";
-import ReviewForm from "../components/ReviewForm";
-import { useRecorder } from "../hooks/useRecorder";
+import { CalendarCheck, Keyboard, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { getTypes, processAudio, processText, retypeNote, saveNote } from "../api/client";
+import Banner from "../components/Banner";
+import Drawer from "../components/Drawer";
+import MicButton from "../components/MicButton";
+import RejectionNotice from "../components/RejectionNotice";
+import ReviewForm from "../components/ReviewForm";
+import TextNoteForm from "../components/TextNoteForm";
+import TodayPanel from "../components/TodayPanel";
+import WaveformBars from "../components/WaveformBars";
+import { useRecorder } from "../hooks/useRecorder";
+import { useTodayNotes } from "../hooks/useTodayNotes";
+
+// Backend rejections that mean "try again", not "something broke".
+const REJECTION_CODES = new Set(["UnclearAudio", "NotANote"]);
+const SAVED_NOTICE_MS = 3500;
+
+function browserTimezone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
+function formatTimer(seconds) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function isTextEntry(target) {
+  return target.closest("input, textarea, select, [contenteditable='true']");
+}
+
+function useElapsedSeconds(running) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!running) return;
+    const started = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 500);
+    return () => {
+      clearInterval(timer);
+      setElapsed(0);
+    };
+  }, [running]);
+  return elapsed;
+}
 
 export default function Home() {
-  const navigate = useNavigate();
   const [types, setTypes] = useState([]);
-  const [status, setStatus] = useState("idle"); // idle | processing | review | error
+  const [status, setStatus] = useState("idle"); // idle | processing | review | rejected | error
   const [draft, setDraft] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isRetyping, setIsRetyping] = useState(false);
-  const [lastAudio, setLastAudio] = useState(null);
-  const [pastedText, setPastedText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
+  const [rejection, setRejection] = useState(null);
+  const [savedNoteId, setSavedNoteId] = useState(null);
+  const [showTodayDrawer, setShowTodayDrawer] = useState(false);
+  const [todayRefresh, setTodayRefresh] = useState(0);
+  const lastAttempt = useRef(null);
+  const elapsed = useElapsedSeconds(status === "processing");
+  const today = useTodayNotes(todayRefresh);
 
-  // Load types once on mount
+  useEffect(() => {
+    if (!savedNoteId) return;
+    const timer = setTimeout(() => setSavedNoteId(null), SAVED_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [savedNoteId]);
+
   useEffect(() => {
     getTypes()
       .then((data) => setTypes(data || []))
-      .catch((err) => console.error("Could not fetch note types:", err));
+      .catch(() => setTypes([]));
   }, []);
 
-  const getTimezone = () => {
-    try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    } catch {
-      return "UTC";
-    }
-  };
-
-  const submitAudio = async (blob, capturedAt) => {
+  const runAttempt = async (attempt) => {
+    lastAttempt.current = attempt;
     setStatus("processing");
     setErrorMessage(null);
+    setRejection(null);
     try {
-      const tz = getTimezone();
-      const result = await processAudio(blob, capturedAt, tz);
+      const timezone = browserTimezone();
+      const result =
+        attempt.kind === "audio"
+          ? await processAudio(attempt.blob, attempt.capturedAt, timezone)
+          : await processText(attempt.text, attempt.capturedAt, timezone);
       setDraft(result);
-      setStatus("review");
-    } catch (err) {
-      console.error("Audio processing error:", err);
-      setErrorMessage(err.message || "Failed to process audio.");
-      setStatus("error");
-    }
-  };
-
-  const handleAudioFinished = async (blob, capturedAt) => {
-    setLastAudio({ blob, capturedAt });
-    await submitAudio(blob, capturedAt);
-  };
-
-  const {
-    isRecording,
-    analyser,
-    seconds,
-    startRecording,
-    stopRecording,
-    error: micError,
-  } = useRecorder(handleAudioFinished);
-
-  const handleTextSubmit = async (e) => {
-    e.preventDefault();
-    if (!pastedText.trim()) return;
-
-    setStatus("processing");
-    setErrorMessage(null);
-    try {
-      const capturedAt = new Date().toISOString();
-      const tz = getTimezone();
-      const result = await processText(pastedText.trim(), capturedAt, tz);
-      setDraft(result);
-      setStatus("review");
-      setPastedText("");
       setShowTextInput(false);
+      setStatus("review");
     } catch (err) {
-      console.error("Text processing error:", err);
-      setErrorMessage(err.message || "Failed to process text.");
+      if (REJECTION_CODES.has(err.code)) {
+        setRejection({ code: err.code, message: err.message, transcript: err.transcript, attempt });
+        setShowTextInput(false);
+        setStatus("rejected");
+        return;
+      }
+      setErrorMessage(err.message || "Something went wrong while processing your note.");
       setStatus("error");
     }
   };
 
-  const handleRetype = async (newTypeName) => {
-    if (!draft) return;
-    setIsRetyping(true);
+  const keepAsNote = async () => {
+    setStatus("processing");
     try {
-      const tz = getTimezone();
-      const updatedDraft = await retypeNote(
-        draft.transcript,
-        newTypeName,
-        draft.created_at,
-        tz
-      );
-      setDraft(updatedDraft);
+      const timezone = browserTimezone();
+      setDraft(await retypeNote(rejection.transcript, "general", rejection.attempt.capturedAt, timezone));
+      setRejection(null);
+      setStatus("review");
     } catch (err) {
-      console.error("Retype error:", err);
-      setErrorMessage("Failed to change note type.");
+      setErrorMessage(err.message || "Couldn't save that as a note.");
+      setStatus("error");
+    }
+  };
+
+  const { isRecording, analyser, seconds, startRecording, stopRecording, error: micError } = useRecorder(
+    (blob, capturedAt) => runAttempt({ kind: "audio", blob, capturedAt }),
+  );
+
+  const isBusy = status === "processing";
+
+  const toggleRecording = () => {
+    if (isBusy) return;
+    if (isRecording) stopRecording();
+    else startRecording();
+  };
+
+  useEffect(() => {
+    if (status === "review") return;
+    const onKeyDown = (e) => {
+      // Space records from anywhere on the page, except while typing or inside a dialog.
+      if (e.code !== "Space" || e.repeat || isTextEntry(e.target)) return;
+      if (document.querySelector("dialog[open]")) return;
+      e.preventDefault();
+      // Otherwise a focused button would also be clicked when Space is released.
+      if (e.target instanceof HTMLElement && e.target !== document.body) e.target.blur();
+      toggleRecording();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
+  const handleRetype = async (typeName) => {
+    setIsRetyping(true);
+    setErrorMessage(null);
+    try {
+      setDraft(await retypeNote(draft.transcript, typeName, draft.created_at, draft.timezone));
+    } catch (err) {
+      setErrorMessage(err.message || "Couldn't switch the note type.");
     } finally {
       setIsRetyping(false);
     }
   };
 
-  const handleConfirmSave = async (confirmedEnvelope) => {
-    setStatus("processing");
+  const handleSave = async (note) => {
+    setIsSaving(true);
+    setErrorMessage(null);
     try {
-      await saveNote(confirmedEnvelope);
-      navigate("/notes");
+      await saveNote(note);
+      setDraft(null);
+      setStatus("idle");
+      setSavedNoteId(note.id);
+      setTodayRefresh((n) => n + 1);
     } catch (err) {
-      console.error("Save note error:", err);
-      setErrorMessage(err.message || "Failed to save note.");
-      setStatus("review");
+      setErrorMessage(err.message || "Couldn't save the note.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDiscard = () => {
     setDraft(null);
-    setLastAudio(null);
     setStatus("idle");
     setErrorMessage(null);
   };
 
-  const handleRetry = () => {
-    if (lastAudio) {
-      submitAudio(lastAudio.blob, lastAudio.capturedAt);
-    } else {
-      setStatus("idle");
-    }
-  };
+  const caption = isRecording
+    ? "Listening… tap to stop"
+    : isBusy
+      ? `Turning your voice into a note…${elapsed > 0 ? ` ${elapsed}s` : ""}`
+      : "Tap to record a note";
 
-  const handleMicClick = () => {
-    if (status === "processing") return;
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  };
+  const isReviewing = status === "review" && draft;
 
-  const formatTimer = (s) =>
-    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  const review = (
+    <div className="mx-auto w-full max-w-2xl space-y-3 py-6 sm:py-10">
+      {errorMessage && <Banner>{errorMessage}</Banner>}
+      <ReviewForm
+        draft={draft}
+        types={types}
+        onConfirm={handleSave}
+        onDiscard={handleDiscard}
+        onRetype={handleRetype}
+        isRetyping={isRetyping}
+        isSaving={isSaving}
+      />
+    </div>
+  );
 
-  return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-[#080c18] flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden text-center text-white">
-      {/* Ambient background glow */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-700/15 blur-[120px]" />
-        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-purple-700/15 blur-[120px]" />
+  const recorder = (
+    <div className="m-auto flex w-full max-w-md flex-col items-center py-10 text-center sm:py-14">
+      <h1 className="font-display text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+        What’s on your mind?
+      </h1>
+      <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
+        Say it out loud. YapIt writes it down, sorts it into a payment, promise, event or note, and
+        lets you check it before saving.
+      </p>
+
+      <div className="mt-10 flex h-12 items-center justify-center">
+        {isRecording ? (
+          <WaveformBars analyser={analyser} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            {isBusy ? "Transcribing and reading your note" : "Everything stays on this device"}
+          </p>
+        )}
       </div>
 
-      <div className="relative z-10 w-full max-w-xl mx-auto flex flex-col items-center">
-        {/* Review Mode */}
-        {status === "review" && draft && (
-          <ReviewForm
-            draft={draft}
-            types={types}
-            onConfirm={handleConfirmSave}
-            onDiscard={handleDiscard}
-            onRetype={handleRetype}
-            isRetyping={isRetyping}
+      <MicButton isRecording={isRecording} isBusy={isBusy} onClick={toggleRecording} />
+
+      <div className="mt-2 flex h-14 flex-col items-center gap-1" aria-live="polite">
+        {isRecording && (
+          <span className="flex items-center gap-2 font-mono text-sm font-medium tabular-nums text-red-300">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" aria-hidden="true" />
+            {formatTimer(seconds)}
+          </span>
+        )}
+        <p className={`text-sm font-medium ${isRecording ? "text-red-200" : "text-slate-300"}`}>{caption}</p>
+        {!isBusy && (
+          <p className="hidden text-xs text-slate-500 sm:block">
+            {isRecording ? "press" : "or press"} <span className="kbd">Space</span>
+            {isRecording && " to stop"}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-6 w-full space-y-3">
+        {savedNoteId && (
+          <Banner tone="success">Saved to today’s notes.</Banner>
+        )}
+        {micError && <Banner>{micError}</Banner>}
+
+        {status === "error" && errorMessage && (
+          <Banner
+            action={
+              <button
+                type="button"
+                onClick={() => runAttempt(lastAttempt.current)}
+                className="btn-subtle shrink-0 px-3 py-1.5 text-xs"
+              >
+                <RotateCcw size={14} aria-hidden="true" />
+                Retry
+              </button>
+            }
+          >
+            {errorMessage}
+          </Banner>
+        )}
+
+        {status === "rejected" && rejection && (
+          <RejectionNotice
+            rejection={rejection}
+            busy={isBusy}
+            onRecordAgain={() => {
+              setRejection(null);
+              setStatus("idle");
+              startRecording();
+            }}
+            onEditText={() => {
+              setStatus("idle");
+              setShowTextInput(true);
+            }}
+            onKeepAnyway={keepAsNote}
           />
         )}
 
-        {/* Recording / Idle / Processing Mode */}
-        {status !== "review" && (
-          <>
-            {/* Wordmark */}
-            <span className="mb-3 text-xs font-semibold tracking-[0.25em] uppercase text-indigo-400">
-              YapIt Voice Notes
-            </span>
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-white leading-tight tracking-tight">
-              Speak your <br />
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                thoughts.
-              </span>
-            </h1>
-            <p className="mt-3 text-slate-400 text-sm max-w-sm">
-              Tap the mic, speak your note in plain English, and let YapIt transcribe and organize it locally.
-            </p>
-
-            {/* Main Interactive Card */}
-            <div className="mt-8 w-full max-w-md rounded-3xl bg-white/[0.04] backdrop-blur-xl border border-white/10 p-8 flex flex-col items-center gap-6 shadow-2xl">
-              {/* Waveform / Status visual */}
-              <div className="w-full flex items-center justify-center min-h-[72px]">
-                {isRecording ? (
-                  <WaveformBars analyser={analyser} />
-                ) : status === "processing" ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-400 animate-spin" />
-                    <span className="text-xs text-indigo-300 font-medium animate-pulse">
-                      Processing audio with Gemma...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="w-14 h-14 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-                  </div>
-                )}
-              </div>
-
-              {/* Timer when recording */}
-              {isRecording && (
-                <div className="flex items-center gap-2 text-red-400 text-sm font-mono font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                  {formatTimer(seconds)}
-                </div>
-              )}
-
-              {/* Central Mic Button */}
-              <button
-                type="button"
-                onClick={handleMicClick}
-                disabled={status === "processing"}
-                aria-label={isRecording ? "Stop recording" : "Start recording"}
-                className={`relative w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/40 cursor-pointer ${
-                  status === "processing"
-                    ? "bg-slate-800 opacity-60 cursor-wait"
-                    : isRecording
-                    ? "bg-red-600 hover:bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.5)] scale-105"
-                    : "bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 shadow-[0_0_40px_rgba(99,102,241,0.4)] hover:scale-105"
-                }`}
-              >
-                {isRecording && (
-                  <span className="absolute inset-0 rounded-full bg-red-500/30 animate-ping pointer-events-none" />
-                )}
-
-                {isRecording ? (
-                  <span className="w-9 h-9 rounded-md bg-white shadow-sm" />
-                ) : (
-                  <img
-                    src={microphone}
-                    alt="Microphone"
-                    className="w-12 h-12 object-contain"
-                  />
-                )}
-              </button>
-
-              {/* Status caption */}
-              <p
-                className={`text-sm font-medium transition-colors ${
-                  isRecording
-                    ? "text-red-400"
-                    : status === "processing"
-                    ? "text-indigo-400"
-                    : "text-slate-400"
-                }`}
-              >
-                {isRecording
-                  ? "Listening... tap to stop"
-                  : status === "processing"
-                  ? "Extracting note fields..."
-                  : "Tap the mic to start yapping"}
-              </p>
-
-              {/* Microphone access error */}
-              {micError && (
-                <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2 text-left">
-                  {micError}
-                </p>
-              )}
-
-              {/* Backend Error State with Retry */}
-              {status === "error" && errorMessage && (
-                <div className="w-full flex flex-col items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
-                  <p>{errorMessage}</p>
-                  <button
-                    type="button"
-                    onClick={handleRetry}
-                    className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition"
-                  >
-                    Retry previous recording
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Text input alternative */}
-            <div className="mt-6">
-              {!showTextInput ? (
-                <button
-                  type="button"
-                  onClick={() => setShowTextInput(true)}
-                  className="text-xs text-slate-500 hover:text-slate-300 transition underline underline-offset-4 cursor-pointer"
-                >
-                  Or paste a transcript as text
-                </button>
-              ) : (
-                <form
-                  onSubmit={handleTextSubmit}
-                  className="w-full max-w-md bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col gap-2 mt-2 animate-fadeIn"
-                >
-                  <textarea
-                    rows={3}
-                    placeholder="Type or paste your note (e.g. 'Ravi owes me 500 rupees by Friday')..."
-                    value={pastedText}
-                    onChange={(e) => setPastedText(e.target.value)}
-                    required
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowTextInput(false)}
-                      className="px-3 py-1 rounded-lg text-xs text-slate-400 hover:text-white"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={status === "processing"}
-                      className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium"
-                    >
-                      Process Text
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-
-            <p className="mt-8 text-xs text-slate-500">
-              100% Local · Powered by faster-whisper and Gemma on Ollama
-            </p>
-          </>
+        {showTextInput ? (
+          <TextNoteForm
+            initialText={rejection?.attempt.kind === "text" ? rejection.attempt.text : ""}
+            disabled={isBusy}
+            onCancel={() => {
+              setShowTextInput(false);
+              setRejection(null);
+            }}
+            onSubmit={(text) => runAttempt({ kind: "text", text, capturedAt: new Date().toISOString() })}
+          />
+        ) : (
+          status !== "rejected" && (
+            <button
+              type="button"
+              onClick={() => setShowTextInput(true)}
+              disabled={isBusy || isRecording}
+              className="btn-ghost mx-auto text-xs text-slate-400"
+            >
+              <Keyboard size={15} aria-hidden="true" />
+              Type a note instead
+            </button>
+          )
         )}
       </div>
+    </div>
+  );
+
+  const panelProps = { notes: today.notes, status: today.status, types, newNoteId: savedNoteId };
+
+  return (
+    <div className="flex lg:h-[calc(100dvh-4rem)]">
+      <aside
+        aria-labelledby="today-heading"
+        className="hidden w-80 shrink-0 border-r border-white/6 bg-ink-900/50 lg:block"
+      >
+        <TodayPanel headingId="today-heading" {...panelProps} />
+      </aside>
+
+      <div className="min-w-0 flex-1 p-3 sm:p-4 lg:overflow-y-auto">
+        <section
+          aria-label={isReviewing ? "Review note" : "Record a note"}
+          className="stage flex min-h-[calc(100dvh-5rem)] flex-col px-4 sm:min-h-[calc(100dvh-6rem)] sm:px-8 lg:min-h-full"
+        >
+          {!isReviewing && (
+            <div className="pt-4 lg:hidden">
+              <button type="button" onClick={() => setShowTodayDrawer(true)} className="btn-subtle px-3 py-1.5 text-xs">
+                <CalendarCheck size={15} aria-hidden="true" />
+                Today
+                {today.status === "ready" && (
+                  <span className="rounded-full bg-white/10 px-1.5 tabular-nums">{today.notes.length}</span>
+                )}
+              </button>
+            </div>
+          )}
+          {isReviewing ? review : recorder}
+        </section>
+      </div>
+
+      {showTodayDrawer && (
+        <Drawer label="Today’s notes" onClose={() => setShowTodayDrawer(false)}>
+          <TodayPanel headingId="today-drawer-heading" {...panelProps} onClose={() => setShowTodayDrawer(false)} />
+        </Drawer>
+      )}
     </div>
   );
 }

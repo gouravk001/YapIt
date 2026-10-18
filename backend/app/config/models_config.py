@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class TranscriptQualityRules(BaseModel):
+    """Thresholds below which a transcript is treated as unclear and the user asked to retry."""
+
+    min_words: int
+    min_avg_logprob: float
+    max_no_speech_prob: float
+    known_hallucinations: list[str] = Field(default_factory=list)
 
 
 class ModelEntry(BaseModel):
@@ -16,10 +25,13 @@ class ModelEntry(BaseModel):
     device: str | None = None
     device_fallback: str | None = None
     compute_type_fallback: str | None = None
+    vad_filter: bool = False
+    quality: TranscriptQualityRules | None = None
     # ollama optional fields
     temperature: float | None = None
     top_p: float | None = None
     num_ctx: int | None = None
+    num_predict: int | None = None
 
 
 class ActiveModels(BaseModel):

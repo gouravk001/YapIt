@@ -6,6 +6,19 @@ A fully local voice-notes app. Speak a note, and YapIt transcribes it, classifie
 
 ---
 
+## Quick run
+
+Once setup (below) is done, start everything from the repo root:
+
+```bash
+./dev.sh            # backend on :8000, then frontend on :5173
+./dev.sh --reload   # also restart the backend when Python files change (slower: reloads Whisper)
+```
+
+Open http://localhost:5173. Ctrl+C stops both. The script checks the virtualenv, `node_modules`, Node 20+ (switching with nvm if needed), Ollama and free ports before starting, and stops the other server if one crashes.
+
+---
+
 ## Requirements
 
 | Requirement | Minimum |
@@ -173,6 +186,7 @@ To register a fine-tuned model:
 |---|---|
 | `backend/config/types.yaml` | Note type definitions (name, fields, examples). Edit to add custom types. |
 | `backend/config/models.yaml` | Model registry and active model selection. |
+| `backend/config/checks.yaml` | Plausibility thresholds: how far ahead or behind a date may be, and the largest normal amount per currency. |
 | `backend/.env` | Host, port, DB path, config dir path. |
 
 **Changing a type:** edits to a type's `description` or `examples` apply in place. Adding, removing or changing its `fields` requires bumping its `version`; the backend refuses to start otherwise. Every version is kept in the `note_types` table, so saved notes keep the definition they were created with.
@@ -187,14 +201,36 @@ Every error response has the same shape:
 { "error": "NotFound", "detail": "Note 'abc' not found." }
 ```
 
+`UnclearAudio` and `NotANote` also include `"transcript"` (what was heard), so the client can show it.
+
 | Status | `error` | When |
 |---|---|---|
 | 400 | `UnknownType` | Retype with a type name not in `types.yaml` |
 | 404 | `NotFound` | Note or route does not exist |
 | 422 | `ValidationError` | Request body or form fields are missing or invalid |
 | 422 | `TranscriptionFailed` | Uploaded audio could not be decoded |
+| 422 | `UnclearAudio` | No speech, background noise, a known Whisper hallucination, or low confidence; the user is asked to record again. Includes `transcript`. |
+| 422 | `NotANote` | The input is a greeting, mic test, assistant command, background media or lyrics, not a note. Includes `transcript`. |
 | 503 | `ModelUnavailable` | Ollama is not running or the model is not pulled |
 | 500 | `InternalServerError` | Anything unexpected (details go to the server log, not the client) |
+
+---
+
+## How a note is processed
+
+1. **Transcribe** (audio only): faster-whisper with voice-activity detection, so silence is dropped instead of turned into invented text.
+2. **Check the transcript** (audio only): rejected as `UnclearAudio` if it is empty, shorter than `min_words`, one of the `known_hallucinations`, or below Whisper's confidence thresholds. All of these live under `quality` in the transcriber's entry in `models.yaml`.
+3. **Classify**: one LLM call names the kind of recording (a note, or a greeting/test, assistant command, background media, lyrics) and picks the note type. Anything but a note is rejected as `NotANote`. Unusable output never rejects a note.
+4. **Extract**: fields from the type definition, schema-constrained.
+5. **Resolve**: dates, money and people are normalised deterministically.
+6. **Refine**: a second look by the LLM. It restates the note in plain words, corrects fields that disagree with the transcript (for example who owes whom), tidies text, and writes the one-line summary. Required values it drops are kept for the user to judge.
+7. **Resolve and validate** again.
+8. **Plausibility check**: deterministic rules from `checks.yaml` flag dates years away, past due dates, dates that could not be worked out (e.g. "30 February"), and zero or huge amounts. Only if they find nothing, one short LLM call asks whether anything is impossible (a 25 PM meeting, a marathon in 10 minutes, a flight that "leaves yesterday"). Findings go in the draft's `warnings` list (`{field, message}`); they never block saving. The review screen shows them and changes the button to **Save anyway**.
+9. Return the draft for review.
+
+Every LLM call retries once if the output is not valid JSON. `num_predict` in `models.yaml` caps how long a single reply can run. Retype skips steps 1–3.
+
+Enum fields can define `value_labels` in `types.yaml`: plain wording the LLM chooses between (for example "I must pay the other person"), mapped back to the stored value. This measurably reduces mix-ups between similar values like `they_owe_me` and `i_owe_them`.
 
 ---
 
@@ -204,10 +240,12 @@ Every error response has the same shape:
 YapIt/
   frontend/               React + Vite + Tailwind app
     src/
-      api/                apiClient.js — all backend calls
-      components/         Small, reusable UI components
-      hooks/              useRecorder.js, etc.
+      api/                client.js — all backend calls
+      components/         Small, reusable UI components (forms built from type definitions)
+      hooks/              useRecorder.js, useTodayNotes.js
+      lib/                Value formatting and per-type icons/colours
       pages/              Home.jsx, Notes.jsx
+      index.css           Theme tokens (colours, fonts) and shared utility classes
   backend/
     app/
       api/                Thin FastAPI route modules

@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Transcription:
+    """Transcript text plus the runtime's confidence signals, when it reports them."""
+
+    text: str
+    avg_logprob: float | None = None
+    no_speech_prob: float | None = None
 
 
 class Transcriber(ABC):
     @abstractmethod
-    def transcribe(self, audio_path: str) -> str:
-        """Transcribe the audio file at *audio_path* and return the full text."""
+    def transcribe(self, audio_path: str) -> Transcription:
+        """Transcribe the audio file at *audio_path*."""
         ...
 
 

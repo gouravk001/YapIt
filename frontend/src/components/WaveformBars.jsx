@@ -1,41 +1,42 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+
+const BAR_COUNT = 28;
+const MIN_HEIGHT = 4;
+const MAX_HEIGHT = 48;
 
 export default function WaveformBars({ analyser }) {
-  const rafRef = useRef(null);
-  const [levels, setLevels] = useState(() => Array(20).fill(4));
+  const [levels, setLevels] = useState(() => Array(BAR_COUNT).fill(MIN_HEIGHT));
 
   useEffect(() => {
     if (!analyser) return;
     const data = new Uint8Array(analyser.frequencyBinCount);
-    const BAR_COUNT = 20;
+    const step = Math.floor(data.length / BAR_COUNT);
+    let frame;
 
     const tick = () => {
       analyser.getByteFrequencyData(data);
-      const step = Math.floor(data.length / BAR_COUNT);
       setLevels(
         Array.from({ length: BAR_COUNT }, (_, i) => {
-          const avg =
-            data.slice(i * step, (i + 1) * step).reduce((a, b) => a + b, 0) / step;
-          return Math.max(4, (avg / 255) * 64);
-        })
+          const avg = data.slice(i * step, (i + 1) * step).reduce((a, b) => a + b, 0) / step;
+          return Math.max(MIN_HEIGHT, (avg / 255) * MAX_HEIGHT);
+        }),
       );
-      rafRef.current = requestAnimationFrame(tick);
+      frame = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
   }, [analyser]);
 
   return (
-    <div className="flex items-center justify-center gap-1.5 h-16" aria-label="Audio waveform">
+    <div className="flex h-12 items-center justify-center gap-1" aria-hidden="true">
       {levels.map((h, i) => (
         <div
           key={i}
-          className="w-1.5 rounded-full bg-gradient-to-t from-red-500 to-rose-300 transition-[height] duration-75"
+          className="w-1 rounded-full bg-white/80 transition-[height] duration-75"
           style={{ height: `${h}px` }}
         />
       ))}
     </div>
   );
 }
-

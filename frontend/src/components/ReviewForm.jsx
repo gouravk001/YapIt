@@ -1,4 +1,15 @@
+import { Check, LoaderCircle, Mic, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import { isEmptyValue } from "../lib/format";
+import { typeLabel } from "../lib/noteTypes";
+import FieldInput from "./FieldInput";
+import TypeIcon from "./TypeIcon";
+import TypePicker from "./TypePicker";
+
+const COPY = {
+  review: { eyebrow: "Review draft", title: "Does this look right?", submit: "Save note", cancel: "Discard" },
+  edit: { eyebrow: "Edit note", title: "Make your changes", submit: "Save changes", cancel: "Cancel" },
+};
 
 export default function ReviewForm({
   draft,
@@ -7,311 +18,160 @@ export default function ReviewForm({
   onDiscard,
   onRetype,
   isRetyping = false,
+  isSaving = false,
+  mode = "review",
 }) {
   const [prevDraft, setPrevDraft] = useState(draft);
-  const [fields, setFields] = useState(draft?.fields || {});
-  const [summary, setSummary] = useState(draft?.summary || "");
-  const [selectedType, setSelectedType] = useState(draft?.type_name || "general");
+  const [fields, setFields] = useState(draft.fields || {});
+  const [summary, setSummary] = useState(draft.summary || "");
+  const [requestedType, setRequestedType] = useState(draft.type_name);
 
   if (draft !== prevDraft) {
     setPrevDraft(draft);
-    setFields(draft?.fields || {});
-    setSummary(draft?.summary || "");
-    setSelectedType(draft?.type_name || "general");
+    setFields(draft.fields || {});
+    setSummary(draft.summary || "");
+    setRequestedType(draft.type_name);
   }
 
-  const currentTypeDef = types.find((t) => t.name === selectedType) || {
-    name: selectedType,
-    fields: [],
+  const copy = COPY[mode];
+  const typeDef = types.find((t) => t.name === draft.type_name) || { fields: [] };
+  const busy = isRetyping || isSaving;
+  const shownType = isRetyping ? requestedType : draft.type_name;
+
+  const handleTypeChange = (typeName) => {
+    setRequestedType(typeName);
+    onRetype(typeName);
   };
 
-  const handleFieldChange = (fieldName, value) => {
-    setFields((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-  };
+  const isMissing = (field) =>
+    draft.missing_fields?.includes(field.name) && isEmptyValue(fields[field.name]);
 
-  const handleTypeChange = (e) => {
-    const newType = e.target.value;
-    setSelectedType(newType);
-    if (onRetype && newType !== draft?.type_name) {
-      onRetype(newType);
-    }
-  };
+  // A field's warning no longer applies once the user has changed that field.
+  const warnings = (draft.warnings || []).filter(
+    (w) => !w.field || fields[w.field] === draft.fields?.[w.field],
+  );
+  const fieldWarning = (field) => warnings.find((w) => w.field === field.name)?.message;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updated = {
+    if (busy) return;
+    onConfirm({
       ...draft,
-      type_name: selectedType,
-      type_version: currentTypeDef.version || draft.type_version || 1,
       summary: summary.trim() || draft.summary,
       fields,
       status: "confirmed",
       missing_fields: [],
-    };
-    onConfirm(updated);
+    });
   };
 
-  const isMissing = (fieldName) => {
-    return draft?.missing_fields?.includes(fieldName);
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(e);
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-xl bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col gap-6 shadow-2xl animate-fadeIn text-left text-white"
+      onKeyDown={handleKeyDown}
+      aria-busy={busy}
+      className="surface w-full animate-rise text-left"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-4">
-        <div>
-          <span className="text-xs uppercase tracking-widest text-indigo-400 font-semibold">
-            Review Note
-          </span>
-          <h2 className="text-xl font-bold text-white tracking-tight">
-            Check & Edit Draft
-          </h2>
-        </div>
+      <div className="space-y-5 p-5 sm:p-7">
+        <header className="flex items-start gap-3.5">
+          <TypeIcon typeName={draft.type_name} />
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-accent">{copy.eyebrow}</p>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-white">{copy.title}</h2>
+          </div>
+        </header>
 
-        {/* Type selector */}
-        <div className="flex flex-col items-end">
-          <label htmlFor="note-type" className="text-[11px] text-slate-400 mb-1">
-            Note Type
-          </label>
-          <select
-            id="note-type"
-            value={selectedType}
-            onChange={handleTypeChange}
-            disabled={isRetyping}
-            className="bg-slate-800 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium cursor-pointer"
+        {warnings.length > 0 && (
+          <div
+            role="status"
+            className="flex animate-fade-in gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3.5"
           >
-            {types.map((t) => (
-              <option key={t.name} value={t.name}>
-                {t.name.toUpperCase()}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {isRetyping && (
-        <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 flex items-center justify-center gap-2">
-          <span className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-          Retyping note fields...
-        </div>
-      )}
-
-      {/* Spoken Transcript preview */}
-      <div className="bg-black/25 p-3.5 rounded-2xl border border-white/5 space-y-1">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-          Transcript
-        </span>
-        <p className="text-sm text-slate-200 italic leading-relaxed">
-          "{draft?.transcript}"
-        </p>
-      </div>
-
-      {/* Summary field */}
-      <div className="space-y-1.5">
-        <label htmlFor="note-summary" className="text-xs font-semibold text-slate-300">
-          Summary
-        </label>
-        <input
-          id="note-summary"
-          type="text"
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          required
-          className="w-full bg-slate-800/80 border border-white/15 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
-
-      {/* Dynamic Fields */}
-      <div className="space-y-4 pt-2 border-t border-white/10">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-          Structured Fields
-        </span>
-
-        {currentTypeDef.fields.map((f) => {
-          const val = fields[f.name];
-          const missing = isMissing(f.name);
-
-          return (
-            <div key={f.name} className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor={`field-${f.name}`}
-                  className="text-xs font-medium text-slate-200 capitalize flex items-center gap-1.5"
-                >
-                  {f.name.replace(/_/g, " ")}
-                  {f.required && <span className="text-red-400">*</span>}
-                </label>
-                {missing && (
-                  <span className="text-[11px] text-red-400 font-medium">
-                    Required field missing
-                  </span>
-                )}
-              </div>
-
-              {/* Enum Field */}
-              {f.field_type === "enum" && (
-                <select
-                  id={`field-${f.name}`}
-                  value={val || ""}
-                  onChange={(e) => handleFieldChange(f.name, e.target.value)}
-                  className={`w-full bg-slate-800/80 border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 ${
-                    missing ? "border-red-500 focus:ring-red-500" : "border-white/15 focus:ring-indigo-500"
-                  }`}
-                >
-                  <option value="">Select an option</option>
-                  {(f.allowed_values || []).map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {/* Money Field */}
-              {f.field_type === "money" && (
-                <div className="flex gap-2">
-                  <input
-                    id={`field-${f.name}`}
-                    type="number"
-                    step="any"
-                    placeholder="Amount"
-                    value={typeof val === "object" ? val?.amount ?? "" : val ?? ""}
-                    onChange={(e) => {
-                      const num = e.target.value === "" ? "" : parseFloat(e.target.value);
-                      const currentCurr = typeof val === "object" ? val?.currency || "INR" : "INR";
-                      handleFieldChange(f.name, { amount: num, currency: currentCurr });
-                    }}
-                    className={`flex-1 bg-slate-800/80 border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 ${
-                      missing ? "border-red-500 focus:ring-red-500" : "border-white/15 focus:ring-indigo-500"
-                    }`}
-                  />
-                  <select
-                    value={typeof val === "object" ? val?.currency || "INR" : "INR"}
-                    onChange={(e) => {
-                      const currentAmt = typeof val === "object" ? val?.amount ?? 0 : val ?? 0;
-                      handleFieldChange(f.name, { amount: currentAmt, currency: e.target.value });
-                    }}
-                    className="w-24 bg-slate-800 border border-white/15 rounded-xl px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="INR">INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Date Field */}
-              {f.field_type === "date" && (
-                <div className="space-y-1">
-                  <input
-                    id={`field-${f.name}`}
-                    type="date"
-                    value={
-                      typeof val === "object"
-                        ? val?.resolved || ""
-                        : typeof val === "string" && val.match(/^\d{4}-\d{2}-\d{2}$/)
-                        ? val
-                        : ""
-                    }
-                    onChange={(e) => {
-                      const spoken = typeof val === "object" ? val?.spoken || "" : "";
-                      handleFieldChange(f.name, { spoken, resolved: e.target.value });
-                    }}
-                    className={`w-full bg-slate-800/80 border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 ${
-                      missing ? "border-red-500 focus:ring-red-500" : "border-white/15 focus:ring-indigo-500"
-                    }`}
-                  />
-                  {typeof val === "object" && val?.spoken && (
-                    <span className="text-[11px] text-slate-400 block">
-                      Spoken phrase: <span className="italic text-slate-300">"{val.spoken}"</span>
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Number Field */}
-              {f.field_type === "number" && (
-                <input
-                  id={`field-${f.name}`}
-                  type="number"
-                  step="any"
-                  value={val ?? ""}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      f.name,
-                      e.target.value === "" ? "" : parseFloat(e.target.value)
-                    )
-                  }
-                  className={`w-full bg-slate-800/80 border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 ${
-                    missing ? "border-red-500 focus:ring-red-500" : "border-white/15 focus:ring-indigo-500"
-                  }`}
-                />
-              )}
-
-              {/* List Field */}
-              {f.field_type === "list" && (
-                <input
-                  id={`field-${f.name}`}
-                  type="text"
-                  placeholder="Comma-separated items"
-                  value={Array.isArray(val) ? val.join(", ") : val || ""}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      f.name,
-                      e.target.value
-                        .split(",")
-                        .map((s) => s.trim())
-                        .filter(Boolean)
-                    )
-                  }
-                  className="w-full bg-slate-800/80 border border-white/15 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              )}
-
-              {/* Text and Person Field */}
-              {(f.field_type === "text" || f.field_type === "person") && (
-                <input
-                  id={`field-${f.name}`}
-                  type="text"
-                  value={val ?? ""}
-                  onChange={(e) => handleFieldChange(f.name, e.target.value)}
-                  className={`w-full bg-slate-800/80 border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 ${
-                    missing ? "border-red-500 focus:ring-red-500" : "border-white/15 focus:ring-indigo-500"
-                  }`}
-                />
-              )}
-
-              <p className="text-[11px] text-slate-400">{f.description}</p>
+            <TriangleAlert size={18} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-100">Double-check this note</p>
+              <ul className="mt-1 space-y-0.5 text-amber-200/90">
+                {warnings.map((w) => (
+                  <li key={`${w.field}-${w.message}`}>{w.message}</li>
+                ))}
+              </ul>
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        <blockquote className="flex gap-3 rounded-xl bg-ink-950/60 p-3.5 ring-1 ring-white/6">
+          <Mic size={16} className="mt-0.5 shrink-0 text-slate-500" aria-label="Transcript" />
+          <p className="text-sm italic leading-relaxed text-slate-300">{draft.transcript}</p>
+        </blockquote>
+
+        {mode === "review" ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-slate-400">Note type</p>
+            <TypePicker types={types} value={shownType} onChange={handleTypeChange} disabled={isRetyping} />
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400">
+            Type: <span className="font-medium text-slate-200">{typeLabel(draft.type_name)}</span>
+          </p>
+        )}
+
+        <div>
+          <label htmlFor="note-summary" className="mb-1.5 block text-xs font-medium text-slate-300">
+            Summary
+          </label>
+          <input
+            id="note-summary"
+            type="text"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            required
+            className="field-input text-base font-medium"
+          />
+        </div>
+
+        <div className="relative">
+          {isRetyping && (
+            <div className="absolute inset-0 z-10 flex animate-fade-in items-center justify-center gap-2 rounded-xl bg-ink-850/80 text-sm text-slate-300 backdrop-blur-sm">
+              <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+              Re-reading as {typeLabel(requestedType)}…
+            </div>
+          )}
+          <fieldset disabled={isRetyping} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <legend className="sr-only">Details</legend>
+            {typeDef.fields.map((field) => (
+              <FieldInput
+                key={`${draft.id}-${field.name}`}
+                field={field}
+                value={fields[field.name]}
+                missing={isMissing(field)}
+                warning={fieldWarning(field)}
+                onChange={(value) => setFields((prev) => ({ ...prev, [field.name]: value }))}
+              />
+            ))}
+          </fieldset>
+        </div>
       </div>
 
-      {/* Form Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
-        <button
-          type="button"
-          onClick={onDiscard}
-          className="px-5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-sm font-semibold transition cursor-pointer"
-        >
-          Discard
-        </button>
-
-        <button
-          type="submit"
-          disabled={isRetyping}
-          className="px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 transition cursor-pointer"
-        >
-          Confirm & Save Note
-        </button>
-      </div>
+      <footer className="flex flex-col-reverse gap-2 border-t border-white/6 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+        <p className="hidden text-xs text-slate-500 sm:block">
+          <span className="kbd">Ctrl</span> + <span className="kbd">Enter</span> to save
+        </p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <button type="button" onClick={onDiscard} disabled={isSaving} className="btn-ghost">
+            {copy.cancel}
+          </button>
+          <button type="submit" disabled={busy} className="btn-primary min-w-32">
+            {isSaving ? (
+              <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Check size={16} aria-hidden="true" />
+            )}
+            {warnings.length > 0 ? "Save anyway" : copy.submit}
+          </button>
+        </div>
+      </footer>
     </form>
   );
 }

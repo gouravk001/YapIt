@@ -1,0 +1,207 @@
+{
+  "model_id": "gemma3-4b-q4",
+  "model_name": "gemma3:4b",
+  "timestamp": "2026-10-18T17:28:21.841343",
+  "total_samples": 52,
+  "classification_accuracy": 94.23,
+  "field_accuracy": 76.15,
+  "needs_review_fraction": 0.04,
+  "average_latency_sec": 2.589,
+  "vram_used_mb": 5740,
+  "per_type_accuracy": {
+    "payment": 90.91,
+    "promise": 100.0,
+    "event": 100.0,
+    "info": 87.5,
+    "general": 83.33,
+    "not_a_note": 100.0
+  },
+  "per_field_accuracy": {
+    "event.date": 87.5,
+    "event.people": 66.67,
+    "event.time": 42.86,
+    "event.title": 87.5,
+    "general.content": 0.0,
+    "info.details": 75.0,
+    "info.topic": 37.5,
+    "payment.amount": 90.0,
+    "payment.direction": 72.73,
+    "payment.due_date": 100.0,
+    "payment.person": 100.0,
+    "promise.commitment": 87.5,
+    "promise.due_date": 100.0,
+    "promise.person": 88.89
+  },
+  "warning_recall": 100.0,
+  "false_warning_rate": 2.56,
+  "errored_samples": [],
+  "field_mismatches": [
+    {
+      "id": "eval-04",
+      "field": "direction",
+      "expected": "they_owe_me",
+      "actual": "i_owe_them"
+    },
+    {
+      "id": "eval-06",
+      "field": "direction",
+      "expected": "they_owe_me",
+      "actual": null
+    },
+    {
+      "id": "eval-06",
+      "field": "amount",
+      "expected": {
+        "amount": 2000.0,
+        "currency": "INR"
+      },
+      "actual": null
+    },
+    {
+      "id": "eval-12",
+      "field": "commitment",
+      "expected": "call doctor for her appointment",
+      "actual": "call the doctor for her appointment"
+    },
+    {
+      "id": "eval-15",
+      "field": "title",
+      "expected": "Product demo meeting with stakeholders",
+      "actual": "Product demo meeting"
+    },
+    {
+      "id": "eval-15",
+      "field": "time",
+      "expected": "4 PM",
+      "actual": "4:00 PM"
+    },
+    {
+      "id": "eval-17",
+      "field": "date",
+      "expected": {
+        "spoken": "next Saturday",
+        "resolved": "2026-10-31"
+      },
+      "actual": {
+        "spoken": "next Saturday",
+        "resolved": "2026-10-24"
+      }
+    },
+    {
+      "id": "eval-17",
+      "field": "time",
+      "expected": "8 PM",
+      "actual": "8:00 PM"
+    },
+    {
+      "id": "eval-20",
+      "field": "people",
+      "expected": [
+        "Rohit"
+      ],
+      "actual": null
+    },
+    {
+      "id": "eval-22",
+      "field": "topic",
+      "expected": "Passport expiry",
+      "actual": "Passport expiration"
+    },
+    {
+      "id": "eval-23",
+      "field": "topic",
+      "expected": "Spare garage key location",
+      "actual": "Spare key location"
+    },
+    {
+      "id": "eval-24",
+      "field": "topic",
+      "expected": "Dr Verma clinic phone number",
+      "actual": "Dr Verma's clinic phone number"
+    },
+    {
+      "id": "eval-25",
+      "field": "details",
+      "expected": "2222",
+      "actual": "2222 last week"
+    },
+    {
+      "id": "eval-27",
+      "field": "content",
+      "expected": "Feeling tired today and thinking about taking a walk later.",
+      "actual": "I am feeling a bit tired today and thinking about taking a walk later."
+    },
+    {
+      "id": "eval-28",
+      "field": "content",
+      "expected": "Random thought about rewriting the parser in Rust eventually.",
+      "actual": "What if we rewrote the parser in Rust eventually."
+    },
+    {
+      "id": "eval-29",
+      "field": "content",
+      "expected": "Birds singing outside the window on a sunny afternoon.",
+      "actual": null
+    },
+    {
+      "id": "eval-30",
+      "field": "content",
+      "expected": "Check tire pressure and buy bread.",
+      "actual": "Check the tires pressure sometime soon, also buy bread."
+    },
+    {
+      "id": "eval-31",
+      "field": "content",
+      "expected": "Maybe start reading sci-fi novel tonight if chores are finished.",
+      "actual": "I will start reading that sci-fi novel tonight if I finish chores."
+    },
+    {
+      "id": "eval-32",
+      "field": "direction",
+      "expected": "they_owe_me",
+      "actual": "i_owe_them"
+    },
+    {
+      "id": "eval-34",
+      "field": "time",
+      "expected": "3 PM",
+      "actual": "3:00 PM"
+    },
+    {
+      "id": "eval-35",
+      "field": "topic",
+      "expected": "Bicycle lock combination",
+      "actual": "Bicycle chain lock combination"
+    },
+    {
+      "id": "eval-37",
+      "field": "time",
+      "expected": "2 PM",
+      "actual": "2:00 PM"
+    },
+    {
+      "id": "eval-38",
+      "field": "person",
+      "expected": "Myself",
+      "actual": null
+    },
+    {
+      "id": "eval-39",
+      "field": "topic",
+      "expected": "Car service booking number",
+      "actual": null
+    },
+    {
+      "id": "eval-39",
+      "field": "details",
+      "expected": "MH02-9988",
+      "actual": null
+    },
+    {
+      "id": "eval-40",
+      "field": "content",
+      "expected": "Thinking about switching team lunches to Thursdays.",
+      "actual": "I am considering changing our team lunches to Thursdays."
+    }
+  ]
+}

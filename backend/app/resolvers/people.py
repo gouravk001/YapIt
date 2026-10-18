@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+# The speaker is never one of the people in their own note.
+_SELF_REFERENCES = {"i", "me", "myself"}
+
 
 def resolve_person(raw: Any, **kwargs: Any) -> str | list[str] | None:
     """Normalize names: strip whitespace, title-case, deduplicate lists."""
@@ -13,13 +16,13 @@ def resolve_person(raw: Any, **kwargs: Any) -> str | list[str] | None:
         deduped: list[str] = []
         for item in raw:
             norm = _normalize_single_name(str(item))
-            if norm and norm.lower() not in seen:
+            if norm and norm.lower() not in seen and norm.lower() not in _SELF_REFERENCES:
                 seen.add(norm.lower())
                 deduped.append(norm)
         return deduped
 
     text = str(raw).strip()
-    if not text:
+    if not text or text.lower() in _SELF_REFERENCES:
         return None
 
     # If comma-separated in a single string, normalize each
@@ -34,4 +37,3 @@ def _normalize_single_name(name: str) -> str:
     cleaned = " ".join(name.strip().split())
     # Capitalize each word properly
     return cleaned.title()
-
