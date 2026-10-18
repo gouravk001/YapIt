@@ -1,27 +1,17 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import yaml
 
 from app.config.checks_config import PlausibilityRules
 from app.config.models_config import ActiveModels, ModelEntry, ModelRegistry
+from app.config.settings import get_settings
 from app.config.types_config import TypeDefinition
 
 
 def _config_dir() -> Path:
-    explicit = os.environ.get("CONFIG_DIR")
-    if explicit:
-        return Path(explicit)
-    local = Path("config")
-    if (local / "types.yaml").exists():
-        return local
-    backend_local = Path("backend/config")
-    if (backend_local / "types.yaml").exists():
-        return backend_local
-    package_config = Path(__file__).resolve().parent.parent.parent / "config"
-    return package_config
+    return get_settings().config_dir
 
 
 def load_types() -> list[TypeDefinition]:

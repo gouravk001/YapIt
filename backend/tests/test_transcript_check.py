@@ -8,6 +8,7 @@ from app.providers.base import Transcription
 
 RULES = TranscriptQualityRules(
     min_words=2,
+    max_seconds=180,
     min_avg_logprob=-1.0,
     max_no_speech_prob=0.6,
     known_hallucinations=["thanks for watching", "you"],
@@ -48,3 +49,10 @@ def test_mostly_noise_is_rejected():
 def test_low_confidence_is_rejected():
     mumbled = Transcription(text="raw vee owes mere", avg_logprob=-1.4, no_speech_prob=0.1)
     assert "couldn't make out" in find_transcript_problem(mumbled, RULES)
+
+
+def test_too_long_recording_is_rejected():
+    long = Transcription(
+        text="a long note", avg_logprob=-0.2, no_speech_prob=0.0, duration_seconds=240
+    )
+    assert "longer than 3 minutes" in find_transcript_problem(long, RULES)

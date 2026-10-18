@@ -11,7 +11,11 @@ from app.services.pipeline_service import PipelineService
 CAPTURED_AT = "2026-10-17T10:00:00+05:30"
 TZ = "Asia/Kolkata"
 RULES = TranscriptQualityRules(
-    min_words=2, min_avg_logprob=-1.0, max_no_speech_prob=0.6, known_hallucinations=["you"]
+    min_words=2,
+    max_seconds=180,
+    min_avg_logprob=-1.0,
+    max_no_speech_prob=0.6,
+    known_hallucinations=["you"],
 )
 
 

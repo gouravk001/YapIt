@@ -31,7 +31,7 @@ def _row_to_envelope(row: Any) -> NoteEnvelope:
     )
 
 
-async def insert_note(envelope: NoteEnvelope, db_path: str | None = None) -> NoteEnvelope:
+async def insert_note(envelope: NoteEnvelope, db_path: str) -> NoteEnvelope:
     query = """
         INSERT INTO notes (
             id, created_at, timezone, transcript, type_name,
@@ -60,7 +60,7 @@ async def insert_note(envelope: NoteEnvelope, db_path: str | None = None) -> Not
 
 
 async def get_notes(
-    db_path: str | None = None,
+    db_path: str,
     type_name: str | None = None,
     person: str | None = None,
     date_from: str | None = None,
@@ -116,7 +116,7 @@ async def get_notes(
             return [_row_to_envelope(r) for r in rows]
 
 
-async def get_note(note_id: str, db_path: str | None = None) -> NoteEnvelope | None:
+async def get_note(note_id: str, db_path: str) -> NoteEnvelope | None:
     async with get_db_connection(db_path) as db:
         async with db.execute("SELECT * FROM notes WHERE id = ?;", (note_id,)) as cursor:
             row = await cursor.fetchone()
@@ -125,9 +125,7 @@ async def get_note(note_id: str, db_path: str | None = None) -> NoteEnvelope | N
             return _row_to_envelope(row)
 
 
-async def update_note(
-    note_id: str, updates: dict[str, Any], db_path: str | None = None
-) -> NoteEnvelope | None:
+async def update_note(note_id: str, updates: dict[str, Any], db_path: str) -> NoteEnvelope | None:
     existing = await get_note(note_id, db_path)
     if not existing:
         return None
@@ -161,16 +159,14 @@ async def update_note(
     return await get_note(note_id, db_path)
 
 
-async def delete_note(note_id: str, db_path: str | None = None) -> bool:
+async def delete_note(note_id: str, db_path: str) -> bool:
     async with get_db_connection(db_path) as db:
         cursor = await db.execute("DELETE FROM notes WHERE id = ?;", (note_id,))
         await db.commit()
         return cursor.rowcount > 0
 
 
-async def get_type_definition(
-    name: str, version: int, db_path: str | None = None
-) -> dict[str, Any] | None:
+async def get_type_definition(name: str, version: int, db_path: str) -> dict[str, Any] | None:
     query = "SELECT definition FROM note_types WHERE name = ? AND version = ?;"
     async with get_db_connection(db_path) as db:
         async with db.execute(query, (name, version)) as cursor:
@@ -178,9 +174,7 @@ async def get_type_definition(
             return json.loads(row["definition"]) if row else None
 
 
-async def upsert_type(
-    name: str, version: int, definition: dict[str, Any], db_path: str | None = None
-) -> None:
+async def upsert_type(name: str, version: int, definition: dict[str, Any], db_path: str) -> None:
     query = """
         INSERT INTO note_types (name, version, definition)
         VALUES (?, ?, ?)

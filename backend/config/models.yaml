@@ -12,6 +12,8 @@ models:
     vad_filter: true
     quality:
       min_words: 2
+      # Longer recordings are rejected; the frontend stops recording before this.
+      max_seconds: 180
       # Whisper's own defaults for "probably wrong" and "probably not speech".
       min_avg_logprob: -1.0
       max_no_speech_prob: 0.6

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -11,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import model_routes, notes, types
 from app.api.error_handlers import register_error_handlers
 from app.config.loader import load_checks, load_model_registry, load_types
+from app.config.settings import get_settings
 from app.providers.factory import create_providers
 from app.services.note_service import NoteService
 from app.services.pipeline_service import PipelineService
@@ -22,11 +22,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger("yapit")
+settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    db_path = os.environ.get("DATABASE_PATH", "./yapit.db")
+    db_path = str(settings.database_path)
     await init_db(db_path)
 
     # Load configuration
@@ -67,11 +68,7 @@ app = FastAPI(
 register_error_handlers(app)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

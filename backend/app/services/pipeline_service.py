@@ -33,7 +33,15 @@ _NOT_A_NOTE_MESSAGE = (
 )
 
 
-def _timed(step: str, fn: Callable[[], T]) -> T:
+StageCallback = Callable[[str], None]
+
+
+def _no_stage(stage: str) -> None:
+    """Default stage callback for callers that don't show progress."""
+
+
+def _timed(step: str, fn: Callable[[], T], on_stage: StageCallback = _no_stage) -> T:
+    on_stage(step)
     started = time.perf_counter()
     result = fn()
     logger.info("%s took %.3fs", step, time.perf_counter() - started)
@@ -59,11 +67,29 @@ class PipelineService:
         self._quality_rules = quality_rules
         self._plausibility_rules = plausibility_rules
 
-    async def process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        return await asyncio.to_thread(self._process_audio, audio_path, captured_at, timezone)
+    async def process_audio(
+        self,
+        audio_path: str,
+        captured_at: str,
+        timezone: str,
+        on_stage: StageCallback = _no_stage,
+    ) -> NoteEnvelope:
+        """Run the full pipeline on a recording. on_stage is called from the worker thread
+        as each stage starts: transcribe, classify, extract, refine, check."""
+        return await asyncio.to_thread(
+            self._process_audio, audio_path, captured_at, timezone, on_stage
+        )
 
-    async def process_text(self, transcript: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        return await asyncio.to_thread(self._process_text, transcript, captured_at, timezone)
+    async def process_text(
+        self,
+        transcript: str,
+        captured_at: str,
+        timezone: str,
+        on_stage: StageCallback = _no_stage,
+    ) -> NoteEnvelope:
+        return await asyncio.to_thread(
+            self._process_text, transcript, captured_at, timezone, on_stage
+        )
 
     async def retype(
         self, transcript: str, type_name: str, captured_at: str, timezone: str
@@ -73,35 +99,50 @@ class PipelineService:
             raise UnknownTypeError(f"Unknown note type: {type_name!r}")
         return await asyncio.to_thread(self._draft, transcript, type_def, captured_at, timezone)
 
-    def _process_audio(self, audio_path: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        transcription = _timed("transcribe", lambda: self._transcriber.transcribe(audio_path))
+    def _process_audio(
+        self, audio_path: str, captured_at: str, timezone: str, on_stage: StageCallback
+    ) -> NoteEnvelope:
+        transcription = _timed(
+            "transcribe", lambda: self._transcriber.transcribe(audio_path), on_stage
+        )
         if self._quality_rules is not None:
             problem = find_transcript_problem(transcription, self._quality_rules)
             if problem:
                 logger.info("Rejected unclear transcript: %s", problem)
                 raise UnclearAudioError(problem, transcript=transcription.text)
-        return self._process_text(transcription.text, captured_at, timezone)
+        return self._process_text(transcription.text, captured_at, timezone, on_stage)
 
-    def _process_text(self, transcript: str, captured_at: str, timezone: str) -> NoteEnvelope:
-        classification = _timed("classify", lambda: classify(transcript, self._types, self._llm))
+    def _process_text(
+        self, transcript: str, captured_at: str, timezone: str, on_stage: StageCallback
+    ) -> NoteEnvelope:
+        classification = _timed(
+            "classify", lambda: classify(transcript, self._types, self._llm), on_stage
+        )
         if not classification.is_note:
             raise NotANoteError(_NOT_A_NOTE_MESSAGE, transcript=transcript)
-        return self._draft(transcript, classification.type_def, captured_at, timezone)
+        return self._draft(transcript, classification.type_def, captured_at, timezone, on_stage)
 
     def _draft(
-        self, transcript: str, type_def: TypeDefinition, captured_at: str, timezone: str
+        self,
+        transcript: str,
+        type_def: TypeDefinition,
+        captured_at: str,
+        timezone: str,
+        on_stage: StageCallback = _no_stage,
     ) -> NoteEnvelope:
-        raw_fields = _timed("extract", lambda: extract(transcript, type_def, self._llm))
+        raw_fields = _timed("extract", lambda: extract(transcript, type_def, self._llm), on_stage)
         fields = resolve(raw_fields, type_def, timezone, captured_at)
 
-        refined = _timed("refine", lambda: refine(transcript, type_def, fields, self._llm))
+        refined = _timed(
+            "refine", lambda: refine(transcript, type_def, fields, self._llm), on_stage
+        )
         if refined is None:
             summary = fallback_summary(transcript)
         else:
             fields = resolve(refined.fields, type_def, timezone, captured_at)
             summary = refined.summary
 
-        warnings = self._warnings(transcript, fields, type_def, captured_at, timezone)
+        warnings = self._warnings(transcript, fields, type_def, captured_at, timezone, on_stage)
 
         return NoteEnvelope(
             id=str(uuid4()),
@@ -124,14 +165,16 @@ class PipelineService:
         type_def: TypeDefinition,
         captured_at: str,
         timezone: str,
+        on_stage: StageCallback,
     ) -> list[NoteWarning]:
         if self._plausibility_rules is None:
             return []
+        on_stage("check")
         concerns = find_concerns(fields, type_def, self._plausibility_rules, captured_at, timezone)
         if concerns:
             return [NoteWarning(field=c.field, message=c.message) for c in concerns]
         # The rules are precise and free, so the model is only asked when they found nothing;
         # that also avoids warning twice about the same value.
         today = capture_day(captured_at, timezone)
-        reason = _timed("plausibility", lambda: check_plausibility(transcript, today, self._llm))
+        reason = _timed("check", lambda: check_plausibility(transcript, today, self._llm))
         return [NoteWarning(message=reason)] if reason else []

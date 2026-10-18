@@ -7,6 +7,7 @@ import av
 
 from app.errors import TranscriptionError
 from app.providers.base import Transcriber, Transcription
+from app.providers.model_download import ensure_whisper_model
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,10 @@ class WhisperProvider(Transcriber):
         from faster_whisper import WhisperModel  # type: ignore[import-untyped]
 
         self._vad_filter = vad_filter
+        # Loading from a local path keeps startup offline once the model is cached.
+        model_path = ensure_whisper_model(model_name)
         try:
-            self._model = WhisperModel(model_name, device=device, compute_type=compute_type)
+            self._model = WhisperModel(model_path, device=device, compute_type=compute_type)
             logger.info("WhisperProvider loaded on %s with compute_type=%s", device, compute_type)
         except Exception as gpu_exc:
             logger.warning(
@@ -51,7 +54,7 @@ class WhisperProvider(Transcriber):
                 compute_type_fallback,
             )
             self._model = WhisperModel(
-                model_name,
+                model_path,
                 device=device_fallback,
                 compute_type=compute_type_fallback,
             )
@@ -63,7 +66,7 @@ class WhisperProvider(Transcriber):
 
     def transcribe(self, audio_path: str) -> Transcription:
         try:
-            segments, _ = self._model.transcribe(audio_path, vad_filter=self._vad_filter)
+            segments, info = self._model.transcribe(audio_path, vad_filter=self._vad_filter)
             segments = list(segments)
         except av.error.FFmpegError as exc:
             raise TranscriptionError("The uploaded audio could not be decoded.") from exc
@@ -71,7 +74,7 @@ class WhisperProvider(Transcriber):
         text = " ".join(segment.text.strip() for segment in segments).strip()
         total_duration = sum(segment.end - segment.start for segment in segments)
         if not segments or total_duration <= 0:
-            return Transcription(text=text)
+            return Transcription(text=text, duration_seconds=info.duration)
 
         def weighted(attr: str) -> float:
             return (
@@ -82,4 +85,5 @@ class WhisperProvider(Transcriber):
             text=text,
             avg_logprob=weighted("avg_logprob"),
             no_speech_prob=weighted("no_speech_prob"),
+            duration_seconds=info.duration,
         )

@@ -28,6 +28,11 @@ class TranscriptionError(AppError):
     code = "TranscriptionFailed"
 
 
+class RecordingTooLargeError(AppError):
+    status_code = 413
+    code = "RecordingTooLarge"
+
+
 class UnclearAudioError(AppError):
     """The recording decoded fine but the speech could not be made out reliably."""
 

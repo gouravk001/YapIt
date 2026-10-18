@@ -102,6 +102,7 @@ async def test_unclear_audio_reports_what_was_heard(tmp_path):
 
     rules = TranscriptQualityRules(
         min_words=2,
+        max_seconds=180,
         min_avg_logprob=-1.0,
         max_no_speech_prob=0.6,
         known_hallucinations=["thanks for watching"],
@@ -119,3 +120,22 @@ async def test_unclear_audio_reports_what_was_heard(tmp_path):
     assert res.status_code == 422
     assert body["error"] == "UnclearAudio"
     assert body["transcript"] == "Thanks for watching!"
+
+
+async def test_oversized_upload_is_refused_and_cleaned_up(client, monkeypatch, tmp_path):
+    import tempfile
+
+    from app.config.settings import get_settings
+
+    monkeypatch.setattr(get_settings(), "max_upload_mb", 1 / 1024)  # 1 KB
+    uploads = tmp_path / "uploads"
+    uploads.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(uploads))
+    res = await client.post(
+        "/notes/process",
+        files={"audio": ("rec.webm", b"x" * 4096, "audio/webm")},
+        data={"captured_at": TEXT_PAYLOAD["captured_at"], "timezone": "Asia/Kolkata"},
+    )
+    assert res.status_code == 413
+    assert res.json()["error"] == "RecordingTooLarge"
+    assert list(uploads.iterdir()) == []

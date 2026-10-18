@@ -16,11 +16,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request(endpoint, options = {}) {
-  const url = `${BASE_URL}${endpoint}`;
+async function send(endpoint, options) {
   let response;
   try {
-    response = await fetch(url, options);
+    response = await fetch(`${BASE_URL}${endpoint}`, options);
   } catch {
     throw new ApiError("Can't reach the YapIt backend. Is it running?", { code: "Offline" });
   }
@@ -32,37 +31,60 @@ async function request(endpoint, options = {}) {
       transcript: body?.transcript,
     });
   }
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  return response.json();
+  return response;
 }
 
-export async function processAudio(audioBlob, capturedAt, timezone) {
+async function request(endpoint, options = {}) {
+  const response = await send(endpoint, options);
+  return response.status === 204 ? null : response.json();
+}
+
+// Reads the pipeline's NDJSON stream: {"stage"} lines, then one {"draft"} or {"error"} line.
+async function streamDraft(endpoint, options, onStage) {
+  const response = await send(endpoint, options);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    let newline;
+    while ((newline = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, newline).trim();
+      buffer = buffer.slice(newline + 1);
+      if (!line) continue;
+      const event = JSON.parse(line);
+      if (event.stage) onStage(event.stage);
+      if (event.draft) return event.draft;
+      if (event.error) {
+        throw new ApiError(event.detail, { code: event.error, transcript: event.transcript });
+      }
+    }
+    if (done) throw new ApiError("The connection closed before the note was ready.");
+  }
+}
+
+export async function processAudio(audioBlob, capturedAt, timezone, onStage = () => {}) {
   const ext = getAudioExtension(audioBlob.type);
   const formData = new FormData();
   formData.append("audio", audioBlob, `recording${ext}`);
   formData.append("captured_at", capturedAt);
   formData.append("timezone", timezone);
 
-  return request("/notes/process", {
-    method: "POST",
-    body: formData,
-  });
+  return streamDraft("/notes/process/stream", { method: "POST", body: formData }, onStage);
 }
 
-export async function processText(transcript, capturedAt, timezone) {
-  return request("/notes/process-text", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      transcript,
-      captured_at: capturedAt,
-      timezone,
-    }),
-  });
+export async function processText(transcript, capturedAt, timezone, onStage = () => {}) {
+  return streamDraft(
+    "/notes/process-text/stream",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript, captured_at: capturedAt, timezone }),
+    },
+    onStage,
+  );
 }
 
 export async function saveNote(noteEnvelope) {

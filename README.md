@@ -79,6 +79,8 @@ python scripts/verify_env.py
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+The first start downloads the Whisper model once (about 460 MB) into the Hugging Face cache. Every later start loads it from disk and makes no network calls, so the app then works fully offline.
+
 The API docs are at http://localhost:8000/docs
 
 ### 4. Frontend
@@ -187,11 +189,27 @@ To register a fine-tuned model:
 | `backend/config/types.yaml` | Note type definitions (name, fields, examples). Edit to add custom types. |
 | `backend/config/models.yaml` | Model registry and active model selection. |
 | `backend/config/checks.yaml` | Plausibility thresholds: how far ahead or behind a date may be, and the largest normal amount per currency. |
-| `backend/.env` | Host, port, DB path, config dir path. |
+| `backend/.env` | Host and port (used by `dev.sh`), database path, config folder, allowed browser origins (`CORS_ORIGINS`, a JSON list), and the largest accepted upload (`MAX_UPLOAD_MB`). See `.env.example`. |
+| `frontend/.env` | `VITE_API_URL`, and optionally `VITE_MAX_RECORDING_SECONDS` (default 120). |
 
 **Changing a type:** edits to a type's `description` or `examples` apply in place. Adding, removing or changing its `fields` requires bumping its `version`; the backend refuses to start otherwise. Every version is kept in the `note_types` table, so saved notes keep the definition they were created with.
 
 ---
+
+## Live progress
+
+`POST /notes/process/stream` and `POST /notes/process-text/stream` take the same input as their non-streaming versions and return NDJSON (one JSON object per line) while the pipeline runs:
+
+```
+{"stage": "transcribe"}
+{"stage": "classify"}
+{"stage": "extract"}
+{"stage": "refine"}
+{"stage": "check"}
+{"draft": { ...note envelope... }}
+```
+
+The last line is either `{"draft": ...}` or an error in the usual shape (`{"error": ..., "detail": ...}`). The frontend uses these to show each step as it happens; the original endpoints remain for scripts and the eval.
 
 ## API errors
 
@@ -209,7 +227,8 @@ Every error response has the same shape:
 | 404 | `NotFound` | Note or route does not exist |
 | 422 | `ValidationError` | Request body or form fields are missing or invalid |
 | 422 | `TranscriptionFailed` | Uploaded audio could not be decoded |
-| 422 | `UnclearAudio` | No speech, background noise, a known Whisper hallucination, or low confidence; the user is asked to record again. Includes `transcript`. |
+| 413 | `RecordingTooLarge` | The upload is bigger than `MAX_UPLOAD_MB`. |
+| 422 | `UnclearAudio` | No speech, background noise, a known Whisper hallucination, low confidence, or longer than `max_seconds`; the user is asked to record again. Includes `transcript`. |
 | 422 | `NotANote` | The input is a greeting, mic test, assistant command, background media or lyrics, not a note. Includes `transcript`. |
 | 503 | `ModelUnavailable` | Ollama is not running or the model is not pulled |
 | 500 | `InternalServerError` | Anything unexpected (details go to the server log, not the client) |

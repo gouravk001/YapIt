@@ -4,13 +4,16 @@ import { getTypes, processAudio, processText, retypeNote, saveNote } from "../ap
 import Banner from "../components/Banner";
 import Drawer from "../components/Drawer";
 import MicButton from "../components/MicButton";
+import ProgressSteps from "../components/ProgressSteps";
 import RejectionNotice from "../components/RejectionNotice";
 import ReviewForm from "../components/ReviewForm";
 import TextNoteForm from "../components/TextNoteForm";
 import TodayPanel from "../components/TodayPanel";
 import WaveformBars from "../components/WaveformBars";
+import { LIMIT_WARNING_SECONDS, MAX_RECORDING_SECONDS } from "../config";
 import { useRecorder } from "../hooks/useRecorder";
 import { useTodayNotes } from "../hooks/useTodayNotes";
+import { AUDIO_STEPS, TEXT_STEPS } from "../lib/pipelineSteps";
 
 // Backend rejections that mean "try again", not "something broke".
 const REJECTION_CODES = new Set(["UnclearAudio", "NotANote"]);
@@ -32,20 +35,6 @@ function isTextEntry(target) {
   return target.closest("input, textarea, select, [contenteditable='true']");
 }
 
-function useElapsedSeconds(running) {
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (!running) return;
-    const started = Date.now();
-    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 500);
-    return () => {
-      clearInterval(timer);
-      setElapsed(0);
-    };
-  }, [running]);
-  return elapsed;
-}
-
 export default function Home() {
   const [types, setTypes] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | processing | review | rejected | error
@@ -59,7 +48,7 @@ export default function Home() {
   const [showTodayDrawer, setShowTodayDrawer] = useState(false);
   const [todayRefresh, setTodayRefresh] = useState(0);
   const lastAttempt = useRef(null);
-  const elapsed = useElapsedSeconds(status === "processing");
+  const [progress, setProgress] = useState(null); // { steps, stage } while a draft streams in
   const today = useTodayNotes(todayRefresh);
 
   useEffect(() => {
@@ -79,12 +68,15 @@ export default function Home() {
     setStatus("processing");
     setErrorMessage(null);
     setRejection(null);
+    const steps = attempt.kind === "audio" ? AUDIO_STEPS : TEXT_STEPS;
+    setProgress({ steps, stage: steps[0] });
+    const onStage = (stage) => setProgress((current) => current && { ...current, stage });
     try {
       const timezone = browserTimezone();
       const result =
         attempt.kind === "audio"
-          ? await processAudio(attempt.blob, attempt.capturedAt, timezone)
-          : await processText(attempt.text, attempt.capturedAt, timezone);
+          ? await processAudio(attempt.blob, attempt.capturedAt, timezone, onStage)
+          : await processText(attempt.text, attempt.capturedAt, timezone, onStage);
       setDraft(result);
       setShowTextInput(false);
       setStatus("review");
@@ -97,6 +89,8 @@ export default function Home() {
       }
       setErrorMessage(err.message || "Something went wrong while processing your note.");
       setStatus("error");
+    } finally {
+      setProgress(null);
     }
   };
 
@@ -113,9 +107,19 @@ export default function Home() {
     }
   };
 
-  const { isRecording, analyser, seconds, startRecording, stopRecording, error: micError } = useRecorder(
+  const {
+    isRecording,
+    hitLimit,
+    analyser,
+    seconds,
+    startRecording,
+    stopRecording,
+    error: micError,
+  } = useRecorder(
     (blob, capturedAt) => runAttempt({ kind: "audio", blob, capturedAt }),
+    MAX_RECORDING_SECONDS,
   );
+  const nearLimit = seconds >= MAX_RECORDING_SECONDS - LIMIT_WARNING_SECONDS;
 
   const isBusy = status === "processing";
 
@@ -177,7 +181,7 @@ export default function Home() {
   const caption = isRecording
     ? "Listening… tap to stop"
     : isBusy
-      ? `Turning your voice into a note…${elapsed > 0 ? ` ${elapsed}s` : ""}`
+      ? "Turning that into a note…"
       : "Tap to record a note";
 
   const isReviewing = status === "review" && draft;
@@ -211,9 +215,7 @@ export default function Home() {
         {isRecording ? (
           <WaveformBars analyser={analyser} />
         ) : (
-          <p className="text-sm text-slate-500">
-            {isBusy ? "Transcribing and reading your note" : "Everything stays on this device"}
-          </p>
+          <p className="text-sm text-slate-500">Everything stays on this device</p>
         )}
       </div>
 
@@ -221,12 +223,21 @@ export default function Home() {
 
       <div className="mt-2 flex h-14 flex-col items-center gap-1" aria-live="polite">
         {isRecording && (
-          <span className="flex items-center gap-2 font-mono text-sm font-medium tabular-nums text-red-300">
+          <span
+            className={`flex items-center gap-2 font-mono text-sm font-medium tabular-nums ${nearLimit ? "text-amber-300" : "text-red-300"}`}
+          >
             <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" aria-hidden="true" />
             {formatTimer(seconds)}
+            {nearLimit && ` / ${formatTimer(MAX_RECORDING_SECONDS)}`}
           </span>
         )}
-        <p className={`text-sm font-medium ${isRecording ? "text-red-200" : "text-slate-300"}`}>{caption}</p>
+        {isBusy && progress ? (
+          <ProgressSteps steps={progress.steps} current={progress.stage} />
+        ) : (
+          <p className={`text-sm font-medium ${isRecording ? "text-red-200" : "text-slate-300"}`}>
+            {caption}
+          </p>
+        )}
         {!isBusy && (
           <p className="hidden text-xs text-slate-500 sm:block">
             {isRecording ? "press" : "or press"} <span className="kbd">Space</span>
@@ -236,6 +247,11 @@ export default function Home() {
       </div>
 
       <div className="mt-6 w-full space-y-3">
+        {hitLimit && !isRecording && (
+          <p className="text-xs text-amber-300">
+            Stopped at {formatTimer(MAX_RECORDING_SECONDS)}, the limit for one note.
+          </p>
+        )}
         {savedNoteId && (
           <Banner tone="success">Saved to today’s notes.</Banner>
         )}

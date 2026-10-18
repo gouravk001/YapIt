@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -9,8 +8,6 @@ from typing import Any
 import aiosqlite
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_DB_PATH = "./yapit.db"
 
 
 def flatten_fields_text(fields_obj: Any) -> str:
@@ -29,21 +26,17 @@ def flatten_fields_text(fields_obj: Any) -> str:
 
 
 @asynccontextmanager
-async def get_db_connection(
-    db_path: str | None = None,
-) -> AsyncGenerator[aiosqlite.Connection, None]:
-    path = db_path or os.environ.get("DATABASE_PATH", DEFAULT_DB_PATH)
-    async with aiosqlite.connect(path) as db:
+async def get_db_connection(db_path: str) -> AsyncGenerator[aiosqlite.Connection, None]:
+    async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
         await db.execute("PRAGMA foreign_keys = ON;")
         yield db
 
 
-async def init_db(db_path: str | None = None) -> None:
-    path = db_path or os.environ.get("DATABASE_PATH", DEFAULT_DB_PATH)
-    logger.info("Initializing database at %s", path)
+async def init_db(db_path: str) -> None:
+    logger.info("Initializing database at %s", db_path)
 
-    async with get_db_connection(path) as db:
+    async with get_db_connection(db_path) as db:
         await db.execute("""
             CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,

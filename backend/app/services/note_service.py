@@ -7,7 +7,7 @@ from app.storage import queries
 
 
 class NoteService:
-    def __init__(self, db_path: str | None = None) -> None:
+    def __init__(self, db_path: str) -> None:
         self._db_path = db_path
 
     async def save_note(self, envelope: NoteEnvelope) -> NoteEnvelope:

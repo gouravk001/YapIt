@@ -11,6 +11,7 @@ class Transcription:
     text: str
     avg_logprob: float | None = None
     no_speech_prob: float | None = None
+    duration_seconds: float | None = None
 
 
 class Transcriber(ABC):

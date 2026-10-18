@@ -9,6 +9,7 @@ class TranscriptQualityRules(BaseModel):
     """Thresholds below which a transcript is treated as unclear and the user asked to retry."""
 
     min_words: int
+    max_seconds: float
     min_avg_logprob: float
     max_no_speech_prob: float
     known_hallucinations: list[str] = Field(default_factory=list)

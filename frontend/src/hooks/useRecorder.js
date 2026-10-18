@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useRecorder(onStopCallback) {
+// Records audio, stopping on its own after maxSeconds; hitLimit says the last stop was automatic.
+export function useRecorder(onStopCallback, maxSeconds) {
   const [isRecording, setIsRecording] = useState(false);
+  const [hitLimit, setHitLimit] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [analyser, setAnalyser] = useState(null);
   const [error, setError] = useState(null);
@@ -29,6 +31,7 @@ export function useRecorder(onStopCallback) {
 
   const startRecording = async () => {
     setError(null);
+    setHitLimit(false);
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Audio recording is not supported in this browser.");
@@ -94,8 +97,14 @@ export function useRecorder(onStopCallback) {
       setIsRecording(true);
 
       clearInterval(timerRef.current);
+      let elapsed = 0;
       timerRef.current = setInterval(() => {
-        setSeconds((s) => s + 1);
+        elapsed += 1;
+        setSeconds(elapsed);
+        if (elapsed >= maxSeconds) {
+          setHitLimit(true);
+          stopRecording();
+        }
       }, 1000);
     } catch (err) {
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
@@ -119,6 +128,7 @@ export function useRecorder(onStopCallback) {
 
   return {
     isRecording,
+    hitLimit,
     analyser,
     seconds,
     startRecording,

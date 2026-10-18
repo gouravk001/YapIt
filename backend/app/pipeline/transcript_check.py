@@ -14,6 +14,13 @@ def find_transcript_problem(
     transcription: Transcription, rules: TranscriptQualityRules
 ) -> str | None:
     """Return a user-facing reason the transcript is unusable, or None if it looks fine."""
+    if (
+        transcription.duration_seconds is not None
+        and transcription.duration_seconds > rules.max_seconds
+    ):
+        minutes = rules.max_seconds / 60
+        return f"That recording is longer than {minutes:g} minutes. Please keep a note shorter."
+
     text = _normalise(transcription.text)
     if not text:
         return "I didn't catch any speech. Please try recording again."

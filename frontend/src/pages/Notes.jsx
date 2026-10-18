@@ -7,6 +7,9 @@ import Dialog from "../components/Dialog";
 import NoteCard from "../components/NoteCard";
 import NotesFilterBar from "../components/NotesFilterBar";
 import ReviewForm from "../components/ReviewForm";
+import UndoToast from "../components/UndoToast";
+import { UNDO_SECONDS } from "../config";
+import { usePendingDelete } from "../hooks/usePendingDelete";
 import { groupByDay } from "../lib/format";
 
 const EMPTY_FILTERS = { search: "", person: "", type: "" };
@@ -86,7 +89,7 @@ export default function Notes() {
     };
   }, [filters.type, person, search, refreshCount]);
 
-  const handleDelete = async (id) => {
+  const commitDelete = async (id) => {
     try {
       await deleteNote(id);
       setNotes((prev) => prev.filter((n) => n.id !== id));
@@ -94,6 +97,8 @@ export default function Notes() {
       setError(`Couldn't delete the note: ${err.message}`);
     }
   };
+  const pendingDelete = usePendingDelete(commitDelete, UNDO_SECONDS * 1000);
+  const visibleNotes = notes.filter((n) => n.id !== pendingDelete.pendingId);
 
   const handleEditSave = async (note) => {
     setIsSavingEdit(true);
@@ -119,7 +124,9 @@ export default function Notes() {
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">Notes</h1>
           <p className="mt-1 text-sm text-slate-400">
-            {loading ? "Loading…" : `${notes.length} ${notes.length === 1 ? "note" : "notes"}${hasFilters ? " found" : ""}`}
+            {loading
+              ? "Loading…"
+              : `${visibleNotes.length} ${visibleNotes.length === 1 ? "note" : "notes"}${hasFilters ? " found" : ""}`}
           </p>
         </div>
         <Link to="/" className="btn-primary">
@@ -141,11 +148,11 @@ export default function Notes() {
             <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />
             Loading notes…
           </div>
-        ) : notes.length === 0 ? (
+        ) : visibleNotes.length === 0 ? (
           !error && <EmptyState filtered={hasFilters} onClear={() => setFilters(EMPTY_FILTERS)} />
         ) : (
           <div className="space-y-8">
-            {groupByDay(notes).map((group) => (
+            {groupByDay(visibleNotes).map((group) => (
               <section key={group.label} aria-label={group.label}>
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   {group.label}
@@ -156,7 +163,7 @@ export default function Notes() {
                       key={note.id}
                       note={note}
                       typeDef={typeByName[note.type_name]}
-                      onDelete={handleDelete}
+                      onDelete={pendingDelete.remove}
                       onEdit={setEditingNote}
                     />
                   ))}
@@ -166,6 +173,15 @@ export default function Notes() {
           </div>
         )}
       </div>
+
+      {pendingDelete.pendingId && (
+        <UndoToast
+          key={pendingDelete.pendingId}
+          message="Note deleted"
+          durationMs={UNDO_SECONDS * 1000}
+          onUndo={pendingDelete.undo}
+        />
+      )}
 
       {editingNote && (
         <Dialog label="Edit note" onClose={() => !isSavingEdit && setEditingNote(null)}>
