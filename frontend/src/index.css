@@ -70,6 +70,15 @@
     background-attachment: fixed;
   }
 
+  /* Scrollbars are hidden everywhere; scrolling still works with wheel, touch and keyboard. */
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
   ::selection {
     @apply bg-accent/30 text-white;
   }

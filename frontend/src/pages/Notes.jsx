@@ -119,30 +119,38 @@ export default function Notes() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
-      <header className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">Notes</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {loading
-              ? "Loading…"
-              : `${visibleNotes.length} ${visibleNotes.length === 1 ? "note" : "notes"}${hasFilters ? " found" : ""}`}
-          </p>
-        </div>
-        <Link to="/" className="btn-primary">
-          <Mic size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">New note</span>
-          <span className="sr-only sm:hidden">New note</span>
-        </Link>
-      </header>
+    // Fixed-height column: the header and filters stay put, only the list below them scrolls.
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-3xl flex-col px-4 pt-8 sm:h-[calc(100dvh-4rem)] sm:pt-12">
+      <div className="shrink-0">
+        <header className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">Notes</h1>
+            <p className="mt-1 text-sm text-slate-400">
+              {loading
+                ? "Loading…"
+                : `${visibleNotes.length} ${visibleNotes.length === 1 ? "note" : "notes"}${hasFilters ? " found" : ""}`}
+            </p>
+          </div>
+          <Link to="/" className="btn-primary">
+            <Mic size={16} aria-hidden="true" />
+            <span className="hidden sm:inline">New note</span>
+            <span className="sr-only sm:hidden">New note</span>
+          </Link>
+        </header>
 
-      <NotesFilterBar types={types} filters={filters} onChange={setFilters} />
+        <NotesFilterBar types={types} filters={filters} onChange={setFilters} />
 
-      <div className="mt-6 space-y-3">
-        {error && <Banner>{error}</Banner>}
+        {error && (
+          <div className="mt-6">
+            <Banner>{error}</Banner>
+          </div>
+        )}
       </div>
 
-      <div className="mt-4">
+      <div
+        aria-label="Notes list"
+        className="-mx-4 mt-3 min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-8 [mask-image:linear-gradient(to_bottom,transparent,black_1rem)]"
+      >
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-400">
             <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />

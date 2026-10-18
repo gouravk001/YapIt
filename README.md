@@ -2,13 +2,23 @@
 
 **A private voice notebook: say it, and YapIt turns it into an organised note, entirely on your own computer.**
 
-Say *"Ravi owes me 1.5 lakh for the laptop, he'll pay next Friday"*. YapIt writes it down, files it
-as a **payment** (*Ravi · owes you · ₹1,50,000 · Fri 30 Oct*), checks it, and shows you a draft to
-confirm. Speech recognition and the language model run locally on open-weight models, so nothing
-leaves your machine and there's no per-use cost.
+Speak naturally and YapIt figures out what kind of note it is and fills in the details:
 
-Built for people who track small but important things on the go (who owes whom, what was
-promised, what's coming up), such as a shop owner or freelancer keeping an informal credit book.
+| You say | YapIt saves |
+|---|---|
+| *"Ravi owes me 1.5 lakh for the laptop, he'll pay next Friday"* | **Payment:** Ravi · owes you · ₹1,50,000 · due Fri 30 Oct |
+| *"Physics assignment is due on the 25th, I told Meera I'd share my notes"* | **Promise:** Meera · share notes · due Sun 25 Oct |
+| *"Team review with Sunita and Tarun next Wednesday at 2 pm"* | **Event:** Team review · Wed 28 Oct · 2 PM · Sunita, Tarun |
+| *"The office Wi-Fi password is brew2026"* | **Info:** Office Wi-Fi password · brew2026 |
+
+You check the draft and save it. Speech recognition and the language model run locally on
+open-weight models, so nothing leaves your machine and there's no per-use cost.
+
+**Who it's for:** anyone who thinks of things on the move and wants them captured properly.
+- **Students:** deadlines, who borrowed your notes, exam dates.
+- **Professionals and freelancers:** meetings, promises to clients, quick facts.
+- **Small businesses:** who owes what, and orders and appointments.
+- **Everyday life:** splitting bills with friends, birthdays, reminders.
 
 **Stack:** faster-whisper · Gemma 3 4B on Ollama · FastAPI · SQLite · React 19 · Vite · Tailwind CSS 4
 
@@ -31,7 +41,7 @@ promised, what's coming up), such as a shop owner or freelancer keeping an infor
 
 - **Speak or type** a note; press the mic or <kbd>Space</kbd>. Live progress shows each step.
 - **Five note types** (payment, promise, event, info, general), defined in YAML, not code.
-- **Indian money and dates:** "5k", "1.5 lakh", "2 crore", ₹1,50,000, "next Friday", "end of the month", "in 3 months".
+- **Money and dates the way people say them:** "5k", "1.5 lakh", "2 crore", ₹1,50,000, $40, €20; "next Friday", "end of the month", "in 3 months", "the 25th".
 - **Rejects non-notes** (mic tests, "play some music", background video) and **asks you to re-record** unclear audio.
 - **Warns about unlikely notes** (a wedding 40 years away, a 25 PM meeting, 30 February), but you can still save them.
 - **Review before saving**, a **Today** sidebar, search and filters, edit, and **delete with undo**.
@@ -112,10 +122,10 @@ Every LLM reply is schema-constrained JSON, retried once if malformed. Models ca
 
 ### Why everything runs locally
 
-- **Privacy:** notes often contain other people's money matters (who owes what), which shouldn't sit on a server you don't control.
+- **Privacy:** notes are personal (money, plans, passwords, other people's details) and shouldn't sit on a server you don't control.
 - **Zero running cost:** no per-note API bill, so it can be offered cheaply.
-- **Works offline,** for example in a shop with patchy internet.
-- **Open models at the core:** they can be benchmarked, swapped with one config line, and fine-tuned for this niche.
+- **Works offline,** for example on a train or wherever the internet is patchy.
+- **Open models at the core:** they can be benchmarked, swapped with one config line, and fine-tuned for exactly this task.
 
 ### Why it's built this way
 
