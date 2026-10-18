@@ -132,14 +132,14 @@ Every LLM reply is schema-constrained JSON, retried once if malformed. Models ca
 | Decision | Why |
 |---|---|
 | **~4B models** | That's what fits in an 8 GB GPU next to Whisper. Bigger models spill onto the CPU and get much slower. |
-| **English-only Whisper (`small.en`)** | It's smaller and more accurate than the multilingual model of the same size. Hindi and Hinglish were left out to keep this version's scope small. |
+| **English only, with Whisper `small.en`** | Mainly a time constraint: a Hinglish version was the original idea and is the next big step. For English, the English-only Whisper model is also smaller and more accurate than the multilingual one of the same size. |
 | **Gemma 3 4B as the default, for now** | The choice is still open. Qwen 3.5 scored higher overall but was slower and sometimes rewrote dates wrongly; the benchmark is how the default will be decided. |
 | **Several small LLM steps instead of one big prompt** | A 4B model does better on one focused job at a time: decide the type, then fill fields, then check. Each step is schema-constrained and timed separately, so failures are visible. |
 | **Dates and money computed by code** | Language models are unreliable at calendar maths and at "1.5 lakh". Code is exact, and covered by tests. |
 | **A refine pass, with plain-language choices** | Who-owes-whom was the most common error. Making the model first restate the note ("so I will give Neha ₹800"), and choose "I will give the money" instead of `i_owe_them`, took hard phrasings from 4/10 to 8/10 correct. |
 | **Rules before the model for plausibility** | Rules catch "40 years away" or "₹50 crore" precisely and for free. The model is asked only when they find nothing, and its prompt was tuned down to 1 false alarm in 53 ordinary notes. |
 | **Review before saving** | A small model still makes mistakes, so nothing is saved until you confirm. Warnings never block saving, and deletes can be undone. |
-| **Voice activity detection plus a hallucination list** | Without them, Whisper turned silence into "Thanks for watching!" |
+| **Voice activity detection plus a hallucination list** | Without them, Whisper turned silence or background noise into confident nonsense text. |
 | **Note types in YAML, with versions** | New types need no code, and old notes keep the definition they were saved with. |
 | **A benchmark separate from the app** | Model decisions are based on measurements from a held-out test set, without any risk to the running app. |
 
@@ -153,7 +153,7 @@ Every LLM reply is schema-constrained JSON, retried once if malformed. Models ca
 | **Thinking mode** on Qwen 3.5 / Gemma 4 | The hidden reasoning multiplies the time per note and uses up the reply budget. It's kept off, matching how the app runs; a thinking on vs off benchmark was postponed. |
 | **A multiple-choice plausibility prompt, or a second "verify" pass** | Both were measured. Multiple choice raised false alarms to 31 of 40 ordinary notes, and the verifier rejected every warning, real ones included. |
 | **Gemma 4 E4B in the benchmark** | Three models from three labs already show the trade-offs. |
-| **Hindi / Hinglish** | Out of scope for this version (see the Whisper choice above). |
+| **Hindi / Hinglish** | Planned from the start, but left out of this version for time (see "English only" above). |
 | **Accounts, cloud sync, mobile apps** | YapIt is a single-user local tool. These are out of scope. |
 
 ---
