@@ -19,10 +19,11 @@ promised, what's coming up), such as a shop owner or freelancer keeping an infor
 1. [Features](#features)
 2. [Quick start](#quick-start)
 3. [How it works](#how-it-works)
-4. [Model benchmark](#model-benchmark)
-5. [Configuration](#configuration)
-6. [API](#api)
-7. [Tests and project layout](#tests-and-project-layout)
+4. [Design decisions](#design-decisions)
+5. [Model benchmark](#model-benchmark)
+6. [Configuration](#configuration)
+7. [API](#api)
+8. [Tests and project layout](#tests-and-project-layout)
 
 ---
 
@@ -101,14 +102,49 @@ flowchart TD
     J -- confirm --> K[(Saved note)]
 ```
 
-Why it's reliable on a small 4B model:
+Every LLM reply is schema-constrained JSON, retried once if malformed. Models can be swapped in
+`backend/config/models.yaml`, because the pipeline only depends on two small interfaces
+(`Transcriber`, `LLM`). Why each step exists is explained under [Design decisions](#design-decisions).
 
-- **Every LLM reply is schema-constrained JSON**, retried once if malformed.
-- **Code, not the model, computes** dates and amounts ("next Friday", "1.5 lakh").
-- **A refine pass** restates the note in plain words before finalising, which catches who-owes-whom mistakes. The model picks from plain choices ("I will give the money") rather than codes like `i_owe_them`.
-- **Plausibility rules run before the LLM** (dates years away, huge amounts), so warnings are precise.
-- **Voice activity detection plus a hallucination list** stop Whisper inventing "Thanks for watching!" from silence.
-- **Models are swappable** in `backend/config/models.yaml`; the pipeline only depends on two small interfaces (`Transcriber`, `LLM`).
+---
+
+## Design decisions
+
+### Why everything runs locally
+
+- **Privacy:** notes often contain other people's money matters (who owes what), which shouldn't sit on a server you don't control.
+- **Zero running cost:** no per-note API bill, so it can be offered cheaply.
+- **Works offline,** for example in a shop with patchy internet.
+- **Open models at the core:** they can be benchmarked, swapped with one config line, and fine-tuned for this niche.
+
+### Why it's built this way
+
+| Decision | Why |
+|---|---|
+| **~4B models** | That's what fits in an 8 GB GPU next to Whisper. Bigger models spill onto the CPU and get much slower. |
+| **English-only Whisper (`small.en`)** | It's smaller and more accurate than the multilingual model of the same size. Hindi and Hinglish were left out to keep this version's scope small. |
+| **Gemma 3 4B as the default, for now** | The choice is still open. Qwen 3.5 scored higher overall but was slower and sometimes rewrote dates wrongly; the benchmark is how the default will be decided. |
+| **Several small LLM steps instead of one big prompt** | A 4B model does better on one focused job at a time: decide the type, then fill fields, then check. Each step is schema-constrained and timed separately, so failures are visible. |
+| **Dates and money computed by code** | Language models are unreliable at calendar maths and at "1.5 lakh". Code is exact, and covered by tests. |
+| **A refine pass, with plain-language choices** | Who-owes-whom was the most common error. Making the model first restate the note ("so I will give Neha ₹800"), and choose "I will give the money" instead of `i_owe_them`, took hard phrasings from 4/10 to 8/10 correct. |
+| **Rules before the model for plausibility** | Rules catch "40 years away" or "₹50 crore" precisely and for free. The model is asked only when they find nothing, and its prompt was tuned down to 1 false alarm in 53 ordinary notes. |
+| **Review before saving** | A small model still makes mistakes, so nothing is saved until you confirm. Warnings never block saving, and deletes can be undone. |
+| **Voice activity detection plus a hallucination list** | Without them, Whisper turned silence into "Thanks for watching!" |
+| **Note types in YAML, with versions** | New types need no code, and old notes keep the definition they were saved with. |
+| **A benchmark separate from the app** | Model decisions are based on measurements from a held-out test set, without any risk to the running app. |
+
+### What we deliberately didn't do
+
+| Not done | Why |
+|---|---|
+| **Cloud LLM APIs** | They would break the privacy, cost and offline goals above. |
+| **Storing audio** | It isn't needed once transcribed, and it's the most sensitive data. Each recording is deleted right after transcription. |
+| **Auto-correcting mishearings** ("welding" → "wedding") | Tested with the LLM: it fixed only about half, and sometimes changed correct words ("welding rods" → "wedding rods"). Postponed until it can be limited to words Whisper itself was unsure about. |
+| **Thinking mode** on Qwen 3.5 / Gemma 4 | The hidden reasoning multiplies the time per note and uses up the reply budget. It's kept off, matching how the app runs; a thinking on vs off benchmark was postponed. |
+| **A multiple-choice plausibility prompt, or a second "verify" pass** | Both were measured. Multiple choice raised false alarms to 31 of 40 ordinary notes, and the verifier rejected every warning, real ones included. |
+| **Gemma 4 E4B in the benchmark** | Three models from three labs already show the trade-offs. |
+| **Hindi / Hinglish** | Out of scope for this version (see the Whisper choice above). |
+| **Accounts, cloud sync, mobile apps** | YapIt is a single-user local tool. These are out of scope. |
 
 ---
 
@@ -153,7 +189,7 @@ xychart-beta
 
 **Takeaways:**
 - **Qwen 3.5 is the most accurate**, especially on who owes whom. But it sometimes replaces the speaker's date words with its own wrong guess ("the day after tomorrow" → "Tuesday"), and it's about 0.7 s slower.
-- **Gemma 3 is perfect on dates and non-notes, and faster.**
+- **Gemma 3 is perfect on dates and non-notes, and faster.** It's the app's default for now, but that choice is still open.
 - **Llama 3.2 is fastest but too weak** on directions and amounts.
 
 Differences of 1–2 points are run-to-run noise. Per-category and per-stage tables are in
