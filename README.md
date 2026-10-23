@@ -77,6 +77,7 @@ cd ..
 Open **http://localhost:5173**. <kbd>Ctrl</kbd>+<kbd>C</kbd> stops everything.
 
 - The first start downloads the Whisper speech model once (about 460 MB); after that no internet is needed.
+- No CUDA toolkit install is needed: the GPU library Whisper uses comes with `requirements.txt`. If the GPU can't be used for any reason, YapIt says so in the log at startup and runs Whisper on the CPU instead.
 - `dev.sh` checks the virtualenv, Node version (switching via nvm if needed), Ollama and free ports before starting. Use `./dev.sh --reload` to restart the backend on code changes.
 - API docs: http://localhost:8000/docs
 

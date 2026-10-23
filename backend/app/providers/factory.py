@@ -18,6 +18,7 @@ def create_providers(registry: ModelRegistry) -> tuple[Transcriber, LLM]:
         device_fallback=transcriber_entry.device_fallback or "cpu",
         compute_type_fallback=transcriber_entry.compute_type_fallback or "int8",
         vad_filter=transcriber_entry.vad_filter,
+        cuda_library_dirs=transcriber_entry.cuda_library_dirs,
     )
 
     llm = OllamaProvider(llm_entry)

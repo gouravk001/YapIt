@@ -27,6 +27,7 @@ class ModelEntry(BaseModel):
     device_fallback: str | None = None
     compute_type_fallback: str | None = None
     vad_filter: bool = False
+    cuda_library_dirs: list[str] = Field(default_factory=list)
     quality: TranscriptQualityRules | None = None
     # ollama optional fields
     temperature: float | None = None

@@ -6,6 +6,8 @@ pydantic-settings>=2.3.0
 python-multipart>=0.0.9
 pyyaml>=6.0.1
 faster-whisper>=1.0.0
+# CUDA 12 cuBLAS for Whisper on NVIDIA GPUs, so it doesn't rely on a system-wide CUDA toolkit
+nvidia-cublas-cu12>=12.4,<13; sys_platform == "linux"
 av<19
 ollama>=0.3.0
 black>=24.0.0

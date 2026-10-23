@@ -10,6 +10,10 @@ models:
     vram_mb: 600
     # Drops silence before decoding, which stops Whisper inventing text from noise.
     vad_filter: true
+    # Where to find the CUDA 12 libraries for the GPU if NVIDIA's pip package isn't installed.
+    # Ollama's Linux install ships them, and YapIt needs Ollama anyway.
+    cuda_library_dirs:
+      - /usr/local/lib/ollama/cuda_v12
     quality:
       min_words: 2
       # Longer recordings are rejected; the frontend stops recording before this.

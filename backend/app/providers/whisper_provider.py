@@ -4,9 +4,11 @@ import logging
 from typing import Any
 
 import av
+import numpy as np
 
 from app.errors import TranscriptionError
 from app.providers.base import Transcriber, Transcription
+from app.providers.cuda_libs import preload_cuda_libraries
 from app.providers.model_download import ensure_whisper_model
 
 logger = logging.getLogger(__name__)
@@ -24,8 +26,19 @@ def _compat_av_open(*args: Any, **kwargs: Any) -> Any:
 av.open = _compat_av_open
 
 
+# One second of silence at Whisper's 16 kHz sample rate: enough to run the model once.
+_CHECK_SAMPLES = 16_000
+
+
+def _check_model_runs(model: Any) -> None:
+    """Run one tiny transcription. Some GPU problems, such as a missing CUDA library, only appear
+    when audio is processed, not when the model loads."""
+    segments, _ = model.transcribe(np.zeros(_CHECK_SAMPLES, dtype=np.float32), vad_filter=False)
+    list(segments)
+
+
 class WhisperProvider(Transcriber):
-    """Transcriber backed by faster-whisper. Tries GPU first, falls back to CPU."""
+    """Transcriber backed by faster-whisper. Uses the GPU if it actually works, else the CPU."""
 
     def __init__(
         self,
@@ -35,34 +48,32 @@ class WhisperProvider(Transcriber):
         device_fallback: str,
         compute_type_fallback: str,
         vad_filter: bool,
+        cuda_library_dirs: list[str],
     ) -> None:
         from faster_whisper import WhisperModel  # type: ignore[import-untyped]
 
         self._vad_filter = vad_filter
+        preload_cuda_libraries(cuda_library_dirs)
         # Loading from a local path keeps startup offline once the model is cached.
         model_path = ensure_whisper_model(model_name)
         try:
             self._model = WhisperModel(model_path, device=device, compute_type=compute_type)
-            logger.info("WhisperProvider loaded on %s with compute_type=%s", device, compute_type)
-        except Exception as gpu_exc:
+            _check_model_runs(self._model)
+            self.device = device
+        except Exception as exc:
             logger.warning(
-                "Failed to load Whisper on %s (%s): %s — falling back to %s/%s",
+                "Whisper can't run on %s (%s): %s. Falling back to %s/%s, which is slower.",
                 device,
                 compute_type,
-                gpu_exc,
+                exc,
                 device_fallback,
                 compute_type_fallback,
             )
             self._model = WhisperModel(
-                model_path,
-                device=device_fallback,
-                compute_type=compute_type_fallback,
+                model_path, device=device_fallback, compute_type=compute_type_fallback
             )
-            logger.info(
-                "WhisperProvider loaded on %s with compute_type=%s",
-                device_fallback,
-                compute_type_fallback,
-            )
+            self.device = device_fallback
+        logger.info("WhisperProvider ready on %s", self.device)
 
     def transcribe(self, audio_path: str) -> Transcription:
         try:
