@@ -47,6 +47,15 @@ open-weight models, so nothing leaves your machine and there's no per-use cost.
 - **Review before saving**, a **Today** sidebar, search and filters, edit, and **delete with undo**.
 - **Offline after the first start.** Audio is never stored.
 
+<img width="1920" height="1080" alt="Screenshot from 2026-10-18 20-02-19" src="https://github.com/user-attachments/assets/ccc53ea5-bf62-464b-945c-e12c69a625c5" />
+<img width="1920" height="1080" alt="Screenshot from 2026-10-18 20-02-29" src="https://github.com/user-attachments/assets/4686092d-9f94-416c-8031-7564e12d1e4a" />
+<img width="1920" height="1080" alt="Screenshot from 2026-10-18 20-08-14" src="https://github.com/user-attachments/assets/ca460af7-02ad-40e2-ba23-8f9c22b021b1" />
+<img width="1920" height="1080" alt="Screenshot from 2026-10-18 20-08-27" src="https://github.com/user-attachments/assets/1f1f8015-e8da-471c-a929-e54f069ac9ed" />
+<img width="1920" height="1080" alt="Screenshot from 2026-10-18 20-08-32" src="https://github.com/user-attachments/assets/eff8e3ed-1329-47dd-8dc1-35b04530cd0e" />
+
+
+
+
 ---
 
 ## Quick start
